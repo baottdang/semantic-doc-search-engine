@@ -1,0 +1,5 @@
+Lib/
+Scripts/
+share/
+__pycache__/
+pdfium-v8-win-x64/
