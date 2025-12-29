@@ -6,6 +6,8 @@ from services.database import database as db
 from services.threads.taskqueue import get_task_queue_instance
 from ui.searchbox import searchbox_utils as utils
 import services.index.index_construct_signal as construct_signal
+from ui.screenshotcapture.screencapture import ScreenCapture
+from ui.screenshotcapture.screencapture_signal import get_screencapture_signal_instance
 import os
 
 class FileSearchBoxWidget(QtWidgets.QWidget):
@@ -16,11 +18,13 @@ class FileSearchBoxWidget(QtWidgets.QWidget):
         self.searchbox = QtWidgets.QLineEdit(self)
         self.searchbox.setPlaceholderText("Enter file directory or browse")
         self.searchbox.textChanged.connect(self.on_query_text_change)
+        self._use_image_query = False
         # Create a browse button
         self.browse_button = QtWidgets.QPushButton("Browse")
         self.browse_button.clicked.connect(self.on_browse_clicked)
         # Screenshot button
         self.screenshot_button = QtWidgets.QPushButton("Screenshot")
+        self.screenshot_button.clicked.connect(self.on_screenshot_clicked)
         # Layout setup
         self.layout = QtWidgets.QHBoxLayout()
 
@@ -29,6 +33,17 @@ class FileSearchBoxWidget(QtWidgets.QWidget):
         self.layout.addWidget(self.browse_button)
         self.layout.addWidget(self.screenshot_button)
         self.setLayout(self.layout)
+
+    @Slot()
+    def clear_text_query(self):
+        self.searchbox.setText("")
+
+    @Slot()
+    def on_screenshot_clicked(self):
+        self.overlay = ScreenCapture()
+        self.overlay.showFullScreen()
+        self.clear_text_query()
+        self._use_image_query = True
 
     @Slot()
     def on_browse_clicked(self):
@@ -43,12 +58,16 @@ class FileSearchBoxWidget(QtWidgets.QWidget):
         path = self.searchbox.text()
         tq = get_task_queue_instance()
         if os.path.isfile(path):
+            self._use_image_query = False # Opt for path to file
             tq.submit(lambda : utils.submit_query_display(path))
         else:
             tq.submit(utils.submit_query_clear)
 
     def get_file_path(self):
         return self.searchbox.text()
+    
+    def use_image_query(self) -> bool:
+        return self._use_image_query
 
 class DatabaseSearchBoxWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
@@ -95,6 +114,13 @@ class SearchBoxWidget(QtWidgets.QWidget):
         self.search_button.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.search_button.clicked.connect(self.on_search_clicked)
 
+        # Query image
+        self.query_image = None
+
+        # Signals
+        self.screencapture_signal_instance = get_screencapture_signal_instance()
+        self.screencapture_signal_instance.capture_done_signal.connect(self.load_query_image)
+
         # Layout setup
         self.layout = QtWidgets.QVBoxLayout()
 
@@ -105,13 +131,31 @@ class SearchBoxWidget(QtWidgets.QWidget):
         self.setLayout(self.layout)
 
     @Slot()
+    def load_query_image(self, qimage):
+        self.query_image = qimage
+        tq = get_task_queue_instance()
+        tq.submit(lambda : utils.submit_query_image_display(qimage))
+
+    @Slot()
     def on_search_clicked(self):
-        file_path = self.file_searchbox.get_file_path()
         database_path = self.database_searchbox.get_selected_database()
-        if os.path.isfile(file_path) and os.path.isdir(database_path):
-            tq = get_task_queue_instance()
-            future = tq.submit(lambda: utils.query(file_path, database_path))
-            future.add_done_callback(utils.query_done)
+        tq = get_task_queue_instance()
+
+        if not self.file_searchbox.use_image_query(): # Use file path as query
+            file_path = self.file_searchbox.get_file_path()
+
+            if os.path.isfile(file_path) and os.path.isdir(database_path):
+                future = tq.submit(lambda: utils.query(file_path, database_path))
+                future.add_done_callback(utils.query_done)
+                print("Path")
+
+        else: # Use image as query
+            if self.query_image is not None and os.path.isdir(database_path):
+                future = tq.submit(lambda: utils.query_using_image(self.query_image, database_path))
+                future.add_done_callback(utils.query_done)
+                print("Image")
+
+
         
 
         

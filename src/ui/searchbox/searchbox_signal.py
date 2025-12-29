@@ -1,10 +1,12 @@
 from PySide6.QtCore import Signal, QObject
+from PySide6.QtGui import QImage
 
 class SearchBoxSignal(QObject):
     # Signals
     query_complete_signal = Signal(list, name="query_complete_signal")
     query_changed_signal = Signal(str, name="query_changed_signal")
     query_cleared_signal = Signal(name="query_changed_signal")
+    query_image_done_signal = Signal(QImage, name="query_image_done_signal")
 
 # Singleton instance
 searchbox_signal_instance = None

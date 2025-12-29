@@ -1,7 +1,29 @@
 from services.index.index_construct_utils import get_image_np_arr_scaled
 from services.index.feature_extractor.feature_extractor import process_np_array
 from services.index.feature_extractor.visionmodel import get_vision_model_instance
+from PySide6.QtGui import QImage
+import cv2
+import numpy as np
 import os
+
+def QImageToCvMat(incomingImage):
+    incomingImage = incomingImage.convertToFormat(QImage.Format_RGB888)
+
+    width = incomingImage.width()
+    height = incomingImage.height()
+    bytes_per_line = incomingImage.bytesPerLine()
+
+    ptr = incomingImage.bits()
+    arr = np.frombuffer(ptr, np.uint8).reshape((height, bytes_per_line))
+
+    # Slice only the valid pixels (ignore padding)
+    arr = arr[:, :width * 3]
+
+    # Reshape into (height, width, 3)
+    arr = arr.reshape((height, width, 3))
+
+    arr_resized = cv2.resize(arr, (224, 224), interpolation=cv2.INTER_AREA)
+    return arr_resized
 
 def query_path(file_path, index, database, NPROBE=10, NUM_THREAD=2, NUM_RESULTS=10):
     """
@@ -25,17 +47,18 @@ def query_path(file_path, index, database, NPROBE=10, NUM_THREAD=2, NUM_RESULTS=
 
     return get_similar_vectors(feature_vector, index, database, NPROBE, NUM_THREAD, NUM_RESULTS)
 
-def query_image(img_array, index, database, NPROBE=10, NUM_THREAD=2, NUM_RESULTS=10):
+def query_image(qimage, index, database, NPROBE=10, NUM_THREAD=2, NUM_RESULTS=10):
     """
     Query the image in the specified index using its numpy array
     
-    :param img_array: A 224x224 numpy array of image for query
+    :param qimage: QImage instance of query
     :param index: Index of the database to search in
     :param NPROBE: Number of clusters to search
     :param NUM_THREAD: Number of threads to perform the query
     :param NUM_RESULTS: Number of returned results
     """
     # Obtain the feature extractor model
+    img_array = QImageToCvMat(qimage)
     model = get_vision_model_instance()
     feature_extractor = model.get_feature_extractor()
     normalize = model.get_normalize()

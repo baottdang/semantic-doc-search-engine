@@ -9,6 +9,7 @@ class QueryImageController():
     def __init__(self, viewport):
         # Query controller components
         self._path = ""
+        self._image = None
         self._task_id = 0
         self.viewport = viewport
         
@@ -16,16 +17,26 @@ class QueryImageController():
         self.searchbox_signal_instance = get_searchbox_signal_instance()
         self.searchbox_signal_instance.query_changed_signal.connect(self.load_controller)
         self.searchbox_signal_instance.query_cleared_signal.connect(self.clear_query)
+        self.searchbox_signal_instance.query_image_done_signal.connect(self.load_image)
     
     def load_controller(self, path):
         self._path = path
         if path != "":
             self.submit_pixmap(path, 1)
 
+    def load_image(self, qimage):
+        self._image = qimage
+        if qimage is not None:
+            self.submit_image(qimage)
+
     def clear_query(self):
         query_image_controller_signal_instance = get_query_image_controller_signal_instance()
         query_image_controller_signal_instance.clear_query_signal.emit()
         print("Clearing")
+
+    def submit_image(self, qimage):
+        query_image_controller_signal_instance = get_query_image_controller_signal_instance()
+        query_image_controller_signal_instance.done_get_query_pixmap_signal.emit(qimage, "QLEN-SCREENSHOT", str(1))
 
     def submit_pixmap(self, path, page):
         """

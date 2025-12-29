@@ -1,7 +1,8 @@
 from PySide6 import QtWidgets
-from PySide6.QtCore import QPoint, QRect, QSize
+from PySide6.QtCore import QPoint, QRect, QSize, Qt
 from PySide6.QtGui import QPainter
 from ui.screenshotcapture.rubberband import RubberBand
+from ui.screenshotcapture.screencapture_signal import get_screencapture_signal_instance
 
 class ScreenCapture(QtWidgets.QWidget):
     def __init__(self, parent=None):
@@ -14,6 +15,7 @@ class ScreenCapture(QtWidgets.QWidget):
         # RubberBand for selection
         self.rubberband = RubberBand(screenshot=self.screenshot, arg__1=QtWidgets.QRubberBand.Rectangle, parent=self)
         self.origin = QPoint()
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
     
     def paintEvent(self, event):
         painter = QPainter(self) 
@@ -32,5 +34,6 @@ class ScreenCapture(QtWidgets.QWidget):
     def mouseReleaseEvent(self, event):
         rect = self.rubberband.geometry()
         cropped = self.screenshot.copy(rect)
-        cropped.save("snip.png")
+        screencapture_signal_instance = get_screencapture_signal_instance()
+        screencapture_signal_instance.capture_done_signal.emit(cropped.toImage())
         self.close()
