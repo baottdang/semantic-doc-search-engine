@@ -39,7 +39,11 @@ class CanvasPainter(QtWidgets.QWidget):
         :param qimage: QImage instance 
         """
         # Update anchor and image
-        self.image = qimage
+        if qimage is not None:
+            self.image = qimage.scaled(self.size(), Qt.KeepAspectRatio, Qt.FastTransformation) 
+        else: # qimage = None to clear the canvas
+            self.image = qimage
+            
         self.anchor_image = qimage
 
         # Signal redraw

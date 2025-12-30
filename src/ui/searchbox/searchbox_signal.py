@@ -7,6 +7,8 @@ class SearchBoxSignal(QObject):
     query_changed_signal = Signal(str, name="query_changed_signal")
     query_cleared_signal = Signal(name="query_changed_signal")
     query_image_done_signal = Signal(QImage, name="query_image_done_signal")
+    capture_start_signal = Signal(name="capture_start_signal")
+    capture_done_signal = Signal(QImage, name="capture_done_signal")
 
 # Singleton instance
 searchbox_signal_instance = None

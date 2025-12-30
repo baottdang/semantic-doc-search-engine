@@ -6,6 +6,7 @@ from ui.sidebar.sidebar import SidebarWidget
 from ui.status_bar.status_bar import StatusBar
 from ui.error.error_signal import get_error_signal_instance
 from ui.main_area.main_area import MainArea
+from ui.searchbox.searchbox_signal import get_searchbox_signal_instance
 import resources.strings.string_resource
 
 class BackgroundWidget(QtWidgets.QMainWindow):
@@ -24,6 +25,16 @@ class BackgroundWidget(QtWidgets.QMainWindow):
         # Signals
         self.error_instance = get_error_signal_instance()
         self.error_instance.error_signal.connect(self.display_error)
+
+        self.search_box_signal_instance = get_searchbox_signal_instance()
+        self.search_box_signal_instance.capture_start_signal.connect(lambda : self.hide())
+        self.search_box_signal_instance.capture_done_signal.connect(lambda qimage: ( 
+                                                                            self.show(), 
+                                                                            self.raise_(), 
+                                                                            self.activateWindow(), 
+                                                                            self.setFocus(Qt.OtherFocusReason) 
+                                                                        )
+                                                                    )
 
         # Set toolbar widget
         self.tool_bar = QtWidgets.QToolBar("Search Box", self)

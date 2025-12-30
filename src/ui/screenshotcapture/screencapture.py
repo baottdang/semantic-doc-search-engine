@@ -1,26 +1,25 @@
 from PySide6 import QtWidgets
-from PySide6.QtCore import QPoint, QRect, QSize, Qt
-from PySide6.QtGui import QPainter
+from PySide6.QtCore import QPoint, QRect, QSize, Qt, Signal
+from PySide6.QtGui import QPainter, QImage
 from ui.screenshotcapture.rubberband import RubberBand
-from ui.screenshotcapture.screencapture_signal import get_screencapture_signal_instance
 
-class ScreenCapture(QtWidgets.QWidget):
+class ScreenCapture(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
 
         # Components
-        screen = QtWidgets.QApplication.primaryScreen()
-        self.screenshot = screen.grabWindow(0)
+        screen = QtWidgets.QApplication.primaryScreen() 
+        self.screenshot_full = screen.grabWindow(0)
 
         # RubberBand for selection
-        self.rubberband = RubberBand(screenshot=self.screenshot, arg__1=QtWidgets.QRubberBand.Rectangle, parent=self)
+        self.rubberband = RubberBand(screenshot=self.screenshot_full, arg__1=QtWidgets.QRubberBand.Rectangle, parent=self)
         self.origin = QPoint()
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
     
     def paintEvent(self, event):
         painter = QPainter(self) 
         painter.setOpacity(0.5) 
-        painter.drawPixmap(0, 0, self.screenshot)
+        painter.drawPixmap(0, 0, self.screenshot_full)
 
     def mousePressEvent(self, event):
         self.origin = event.pos()
@@ -33,7 +32,11 @@ class ScreenCapture(QtWidgets.QWidget):
 
     def mouseReleaseEvent(self, event):
         rect = self.rubberband.geometry()
-        cropped = self.screenshot.copy(rect)
-        screencapture_signal_instance = get_screencapture_signal_instance()
-        screencapture_signal_instance.capture_done_signal.emit(cropped.toImage())
+        cropped = self.screenshot_full.copy(rect)
+        
+        self.capture = cropped.toImage()
+
         self.close()
+
+    def get_capture(self):
+        return self.capture

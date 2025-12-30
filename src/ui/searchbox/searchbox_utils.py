@@ -58,8 +58,9 @@ def submit_query_display(path):
     
     :param path: Description
     """
-    signal_instance = get_searchbox_signal_instance()
-    signal_instance.query_changed_signal.emit(path)
+    if path != "":
+        signal_instance = get_searchbox_signal_instance()
+        signal_instance.query_changed_signal.emit(path)
 
 def submit_query_image_display(qimage):
     """
@@ -67,8 +68,9 @@ def submit_query_image_display(qimage):
     
     :param qimage: Image of query
     """
-    signal_instance = get_searchbox_signal_instance()
-    signal_instance.query_image_done_signal.emit(qimage)
+    if qimage is not None:
+        signal_instance = get_searchbox_signal_instance()
+        signal_instance.query_image_done_signal.emit(qimage)
 
 def submit_query_clear():
     """

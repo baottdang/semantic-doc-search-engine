@@ -32,7 +32,6 @@ class QueryImageController():
     def clear_query(self):
         query_image_controller_signal_instance = get_query_image_controller_signal_instance()
         query_image_controller_signal_instance.clear_query_signal.emit()
-        print("Clearing")
 
     def submit_image(self, qimage):
         query_image_controller_signal_instance = get_query_image_controller_signal_instance()
