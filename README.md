@@ -34,7 +34,7 @@
 
 - Choose the path to your database and click add, the process will run automatically in the background, to ensure maximum performance, close other apps before this process . **Note that** only databases **big enough** can be indexed, and that includes ones with **at least 400 files of images or pdfs**.
 ### Query
-- Upon query, the user may browse to the path of the query file of their choosing, **Or** click on the screenshot button and select the part of the screen they want to query. Both of which will lead to the query showing up on the right panel of the main window.
+- Upon query, the user may browse to the path of the query file of their choosing, **Or** click on the screenshot button and select the part of the screen they want to query. Both of which will lead to the query showing up on the left panel of the main window.
 
 - Then choose the database the search will be performed in.
 
