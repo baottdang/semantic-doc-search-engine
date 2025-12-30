@@ -11,6 +11,8 @@ gallery_controller_signal_instance = None
 
 def get_query_image_controller_signal_instance():
     global gallery_controller_signal_instance
+
     if gallery_controller_signal_instance is None:
         gallery_controller_signal_instance = QueryImageControllerSignal()
+        
     return gallery_controller_signal_instance

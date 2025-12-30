@@ -26,8 +26,8 @@ def pdf2QImage(file_path, page, viewport_height=0, viewport_width=0, dpi=80):
         # Load pdf file to numpy array
         arr_bgra = pdfium_wrapper.render_page_to_numpy(file_path, page - 1, 0, 0, dpi) # Returns in BGRA format
         if arr_bgra is not None:            
-            # BGRA → BGR (drops alpha)
-            img_bgr = cv2.cvtColor(arr_bgra, cv2.COLOR_BGRA2BGR)
+            # BGRA → RGB (drops alpha)
+            img_bgr = cv2.cvtColor(arr_bgra, cv2.COLOR_BGRA2RGB)
 
             # Resize to optimal size for viewport
             height, width, _ = img_bgr.shape
