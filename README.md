@@ -22,7 +22,7 @@
 
 ## Setup
 
-- To start the app, simply clone it to your system, inside a (preferably) virtual environment.
+- To start the app, simply clone it to your system, (preferably) inside a virtual environment.
 
 - Install the dependancies with ``pip install -r requirements.txt``
   
