@@ -8,6 +8,7 @@ from ui.searchbox import searchbox_utils as utils
 import services.index.index_construct_signal as construct_signal
 from ui.screenshotcapture.screencapture import ScreenCapture
 from ui.searchbox.searchbox_signal import get_searchbox_signal_instance
+from resources.strings.string_resource import SUPPORTED_IMAGE_FORMATS
 import os
 
 class FileSearchBoxWidget(QtWidgets.QWidget):
@@ -44,9 +45,18 @@ class FileSearchBoxWidget(QtWidgets.QWidget):
 
     @Slot()
     def clear_text_query(self):
+        """
+        Clear text in file searchbox
+        
+        """
         self.searchbox.setText("")
 
     def start_capture(self):
+        """
+        Load the ScreenCapture instance and let user capture the screen. 
+        Switches query mode to image query.
+        
+        """
         screencapturer = ScreenCapture()
         screencapturer.showFullScreen()
         screencapturer.exec()
@@ -61,19 +71,33 @@ class FileSearchBoxWidget(QtWidgets.QWidget):
 
     @Slot()
     def on_screenshot_clicked(self):
+        """
+        Emit signal to close the main window, wait a bit, and call the screencapture method
+        
+        """
         # Emit signal to temporarily hide main window
         self.searchbox_signal_instance.capture_start_signal.emit()
         QTimer.singleShot(300, self.start_capture) # Delay the creation of screencapture overlay a bit to fully hide main window
 
     @Slot()
     def on_browse_clicked(self):
+        """
+        Allow user to browse the directory for a path to query, manually submit image to display since the textbox's 
+        onchanged event uses textEdited (instead of textChanged) which
+        doesn't automatically call the display pipeline
+        
+        :param self: Description
+        """
         # Open a file dialog to select a file
         file_path, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Open", "", filters)
+
         if file_path:
             self.searchbox.setText(file_path)
             self._use_image_query = False
+
             # Manually submit image to display
             tq = get_task_queue_instance()
+
             if os.path.isfile(file_path):
                 tq.submit(lambda : utils.submit_query_display(file_path))
             else:
@@ -81,10 +105,17 @@ class FileSearchBoxWidget(QtWidgets.QWidget):
 
     @Slot()
     def on_query_text_edited(self):
+        """
+        Display the query image based on whether the path currently in textbox is valid or not,
+        if not, signal to clear the display. Any changes made to the textbox switches query mode to using
+        path to query instead of image query through screenshot
+        
+        """
         path = self.searchbox.text()
         tq = get_task_queue_instance()
         self._use_image_query = False
-        if os.path.isfile(path):
+    
+        if os.path.isfile(path) and path.lower().endswith(SUPPORTED_IMAGE_FORMATS + ".pdf"):
             tq.submit(lambda : utils.submit_query_display(path))
         else:
             tq.submit(utils.submit_query_clear)
@@ -96,6 +127,10 @@ class FileSearchBoxWidget(QtWidgets.QWidget):
         return self.capture
     
     def use_image_query(self):
+        """
+        Returns current query mode (Image query or Path query)
+        
+        """
         return self._use_image_query
 
 class DatabaseSearchBoxWidget(QtWidgets.QWidget):

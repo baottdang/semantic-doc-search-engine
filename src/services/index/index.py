@@ -19,7 +19,7 @@ class Index():
         for _, _, index_path, database_path in index_list:
             if os.path.isfile(index_path):
                 self.indices[database_path] = faiss.read_index(index_path)
-            else:
+            else: # Replace this later with more robust error handling
                 error_instance = get_error_signal_instance()
                 error_instance.error_signal.emit("Index Error", f"Could not find index of {database_path}")
                 break

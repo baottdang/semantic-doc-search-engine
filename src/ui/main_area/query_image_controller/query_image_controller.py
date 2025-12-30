@@ -20,26 +20,46 @@ class QueryImageController():
         self.searchbox_signal_instance.query_image_done_signal.connect(self.load_image)
     
     def load_controller(self, path):
+        """
+        Load the path to query file to the controller
+        
+        :param path: Path to file
+        """
         self._path = path
+
         if path != "":
-            self.submit_pixmap(path, 1)
+            self.submit_file_to_display(path, 1)
 
     def load_image(self, qimage):
+        """
+        Load the QImage instance of query to controller
+        
+        :param qimage: QImage of query
+        """
         self._image = qimage
+
         if qimage is not None:
-            self.submit_image(qimage)
+            self.submit_image_to_display(qimage)
 
     def clear_query(self):
+        """
+        Submit a signal to image display to clear the query panel (path, page, image)
+        """
         query_image_controller_signal_instance = get_query_image_controller_signal_instance()
         query_image_controller_signal_instance.clear_query_signal.emit()
 
-    def submit_image(self, qimage):
+    def submit_image_to_display(self, qimage):
+        """
+        Submit a signal with the qimage to display
+        
+        :param qimage: QImage instance
+        """
         query_image_controller_signal_instance = get_query_image_controller_signal_instance()
         query_image_controller_signal_instance.done_get_query_pixmap_signal.emit(qimage, "QLEN-SCREENSHOT", str(1))
 
-    def submit_pixmap(self, path, page):
+    def submit_file_to_display(self, path, page):
         """
-        Load file as pixmap, submit signal to display
+        Load file as QImage instance, call submit signal with result to display
         
         :param path: Path to file
         :param page: Page of file
