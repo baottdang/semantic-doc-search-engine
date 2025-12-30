@@ -1,4 +1,6 @@
 from services.database.database import get_main_database_instance
+from ui.error.error_signal import get_error_signal_instance
+import os
 
 class Index():
     def __init__(self, parent=None):
@@ -15,7 +17,12 @@ class Index():
         database = get_main_database_instance()
         index_list = database.get_indices()
         for _, _, index_path, database_path in index_list:
-            self.indices[database_path] = faiss.read_index(index_path)
+            if os.path.isfile(index_path):
+                self.indices[database_path] = faiss.read_index(index_path)
+            else:
+                error_instance = get_error_signal_instance()
+                error_instance.error_signal.emit("Index Error", f"Could not find index of {database_path}")
+                break
 
     def get_index(self, path):
         """
