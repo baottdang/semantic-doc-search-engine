@@ -20,6 +20,16 @@
 
 - Live file indexing (In development): With the integrated service in the background, the application can automatically mark new file additions, edits or removals to update the index, strongly embracing **Index once, run forever** philosophy.
 
+## Tech stack:
+
+- Feature Extraction: MobilenetV3, TorchVision.
+
+- Machine learning Index: FAISS.
+
+- Database: SQLite.
+
+- Graphical User Interface: PySide6.
+
 ## Setup
 
 - To start the app, simply clone it to your system, (preferably) inside a virtual environment.
