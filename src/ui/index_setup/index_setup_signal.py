@@ -4,6 +4,7 @@ class IndexSignal(QObject):
     # Signals
     index_start_signal = Signal(str, name="index_start")
     index_complete_signal = Signal(str, str, name="index_complete")
+    index_error_signal = Signal(str, name="index_error")
 
 # Singleton instance
 index_signal = None

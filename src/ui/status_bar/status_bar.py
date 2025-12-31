@@ -14,6 +14,7 @@ class StatusBar(QtWidgets.QStatusBar):
         self.index_signal = index_signal.get_index_signal_instance()
         self.index_signal.index_start_signal.connect(self.show_index_constructing)
         self.index_signal.index_complete_signal.connect(self.show_index_complete)
+        self.index_signal.index_error_signal.connect(self.show_index_error_shutdown)
 
     @Slot()
     def show_index_constructing(self, path):
@@ -32,6 +33,13 @@ class StatusBar(QtWidgets.QStatusBar):
         self.removeWidget(self.start_index_label)
         self.removeWidget(self.progress_bar)
         msg = f"Added {path} index successfully to {index_name} index"
+        self.show_message(msg, 8000)
+
+    @Slot()
+    def show_index_error_shutdown(self, database_name):
+        self.removeWidget(self.start_index_label)
+        self.removeWidget(self.progress_bar)
+        msg = f"Failed to add {database_name} index"
         self.show_message(msg, 8000)
 
     def show_message(self, msg, time=4000):

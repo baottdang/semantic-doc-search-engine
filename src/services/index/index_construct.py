@@ -10,7 +10,6 @@ def construct_index(folder_path):
     import time
     import services.index.feature_extractor.visionmodel as vm
     import services.index.index_construct_utils as utils
-    import services.index.index_construct_signal as construct_signal
     from itertools import chain
     from concurrent.futures import ProcessPoolExecutor
     from services.database import database as db
@@ -18,6 +17,8 @@ def construct_index(folder_path):
     from services.index.feature_extractor.feature_extractor import process_np_arrays
     from resources.strings.string_resource import database_path 
     from services.index.index import get_index_instance
+    from services.index.index_construct_signal import get_construct_signal_instance
+    from ui.error.error_signal import get_error_signal_instance
 
     start_time = time.time()
 
@@ -35,6 +36,7 @@ def construct_index(folder_path):
 
     # Bucket to hold entries for batching through yielding
     bucket = []
+    vector_count = 0
 
     index_is_trained = False
     BATCH_SIZE = 1000
@@ -52,9 +54,11 @@ def construct_index(folder_path):
     # Get name of index
     index_name = utils.path_to_dbname(folder_path)
 
+    # Signal
+    signal = get_construct_signal_instance()
+
     # Loop through each batch of file in the folder tree
     for paths in utils.search_folder_tree(f_address=folder_path, root_level=True, bucket=bucket, BATCH_SIZE=BATCH_SIZE):
-        print(len(paths))
         with ProcessPoolExecutor(max_workers=os.cpu_count()//2) as executor:
             np_arr_packages = list(filter(None, executor.map(utils.get_image_np_arr_scaled, paths)))
         
@@ -73,6 +77,7 @@ def construct_index(folder_path):
                 ids.append(next_id)
                 database.add_index_entry(next_id, index_name, path, page, commit=False)
                 next_id += 1
+                vector_count += 1
 
         # Train and add all features to index
         train_batch = []
@@ -98,6 +103,14 @@ def construct_index(folder_path):
                 index.add_with_ids(features, np.array(ids[id_ptr:id_ptr+n], dtype=np.int64))
                 id_ptr += n
 
+    # Check database size, database must contain at least 400 files, discard if too small
+    if vector_count <= 400:
+        error_instance = get_error_signal_instance()
+        error_instance.error_signal.emit("Database Error", "Not enough files in database for index\nDatabase must have at least 400 files (PDF pages or Images)")
+        signal.construct_error_signal.emit(folder_path)
+        database.close_connection() # Close the worker's connection to database (The main one is still alive)
+        return
+
     # Write index to disk
     idx_path = os.path.join(index_path, f"{index_name}.index")
     faiss.write_index(index, idx_path)
@@ -112,7 +125,6 @@ def construct_index(folder_path):
     index_instance.add_new_index_to_mem(index, folder_path)
 
     # Signal completion
-    signal = construct_signal.get_construct_signal_instance()
     signal.construct_complete_signal.emit(folder_path, index_name)
 
     end_time = time.time()

@@ -28,6 +28,7 @@ class IndexSetupWidget(QtWidgets.QWidget):
         self.signal = signal.get_index_signal_instance()
         self.construct_signal = construct_signal.get_construct_signal_instance()
         self.construct_signal.construct_complete_signal.connect(self.complete_add_index)
+        self.construct_signal.construct_error_signal.connect(self.error_add_index)
         
         # Layout setup
         self.browser_layout = QtWidgets.QHBoxLayout()
@@ -64,10 +65,15 @@ class IndexSetupWidget(QtWidgets.QWidget):
         self.setEnabled(False)
         self.signal.index_start_signal.emit(self.get_database_path())
 
-    @ Slot()
+    @Slot()
     def complete_add_index(self, path, index_name):
         self.setEnabled(True)
         self.signal.index_complete_signal.emit(path, index_name)
+
+    @Slot()
+    def error_add_index(self, database_name):
+        self.setEnabled(True)
+        self.signal.index_error_signal.emit(database_name)
 
     def get_database_path(self):
         return self.path_field.text()

@@ -22,7 +22,7 @@ class Index():
             else: # Replace this later with more robust error handling
                 error_instance = get_error_signal_instance()
                 error_instance.error_signal.emit("Index Error", f"Could not find index of {database_path}")
-                break
+                continue
 
     def get_index(self, path):
         """
