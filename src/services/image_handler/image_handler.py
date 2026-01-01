@@ -2,7 +2,7 @@ from services.index.pdfium import pdfium_wrapper
 from PySide6.QtGui import QImage, QImageReader
 from PySide6.QtCore import QSize
 from resources.strings.string_resource import SUPPORTED_IMAGE_FORMATS
-import cv2, os
+import os
 
 def compute_target_size(height, width, viewport_height, viewport_width):
     if height != 0 and width != 0:
@@ -22,6 +22,8 @@ def pdf2QImage(file_path, page, viewport_height=0, viewport_width=0, dpi=80):
     :param viewport_width: Width of viewport
     :param dpi: Desired dpi
     """
+    import cv2
+
     if os.path.exists(file_path) and file_path.lower().endswith(".pdf"):
         # Load pdf file to numpy array
         arr_bgra = pdfium_wrapper.render_page_to_numpy(file_path, page - 1, 0, 0, dpi) # Returns in BGRA format

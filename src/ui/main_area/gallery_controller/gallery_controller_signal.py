@@ -4,6 +4,7 @@ from PySide6.QtGui import QImage
 class GalleryControllerSignal(QObject):
     # Signals
     done_get_pixmap_signal = Signal(QImage, str, str, str, name="done_get_pixmap_signal")
+    changed_page_signal = Signal(str, name="changed_page_signal")
 
 # Singleton instance
 gallery_controller_signal_instance = None

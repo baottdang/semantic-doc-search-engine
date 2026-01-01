@@ -2,11 +2,12 @@ from services.index.index_construct_utils import get_image_np_arr_scaled
 from services.index.feature_extractor.feature_extractor import process_np_array
 from services.index.feature_extractor.visionmodel import get_vision_model_instance
 from PySide6.QtGui import QImage
-import cv2
 import numpy as np
 import os
 
 def QImageToCvMat(incomingImage):
+    import cv2
+    
     incomingImage = incomingImage.convertToFormat(QImage.Format_RGB888)
 
     width = incomingImage.width()

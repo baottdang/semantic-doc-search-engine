@@ -1,7 +1,7 @@
 import os
 
 app_name = "QLen"
-version = "1.0.0"
+version = "2.1.0"
 author = "Dang Tran Thai Bao"
 filters = "Image files (*.png *.xpm *.jpg);;Document files (*.pdf *.PDF);;All files (*.png *.jpg *.pdf *.PDF)"
 SUPPORTED_IMAGE_FORMATS = (

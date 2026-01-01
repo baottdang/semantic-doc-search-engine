@@ -50,6 +50,11 @@ class GalleryController():
         self._task_id += 1
         task_id = self._task_id
 
+        # Submit to render metadata
+        gallery_controller_signal_instance = get_gallery_controller_signal_instance()
+        gallery_controller_signal_instance.changed_page_signal.emit(path)
+
+        # Submit to render image
         future = worker.submit(lambda : render_file(path=path, page=page, viewport_height=viewport_height, viewport_width=viewport_width, task_id=task_id, dpi=80))
         future.add_done_callback(lambda future : self.done_get_qimage_callback(future, path, page, score))
 
