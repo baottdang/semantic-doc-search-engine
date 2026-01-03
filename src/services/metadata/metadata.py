@@ -47,3 +47,36 @@ def get_metadata(path):
             return exif
 
     return dict()
+
+def get_custom_xmp_metadata(path):
+    # if os.path.exists(path) and path.lower().endswith(".pdf"):
+    #     pdf = pikepdf.open(path)
+    #     meta = pdf.open_metadata()
+    #     if meta:
+    #         return meta.get("custom:Insights", "") # Supposed to be a JSON string
+    # return ""
+    return """
+        {
+        "company": "TechCorp",
+        "employees": [
+            {
+            "id": 1,
+            "name": "Alice",
+            "role": "Developer",
+            "skills": ["Python", "JavaScript", "SQL"]
+            },
+            {
+            "id": 2,
+            "name": "Bob",
+            "role": "Designer",
+            "skills": ["Photoshop", "Illustrator"]
+            }
+        ],
+        "location": {
+            "city": "New York",
+            "country": "USA"
+        },
+        "active": true
+        }
+        """
+        

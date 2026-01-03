@@ -1,5 +1,5 @@
 from services.threads.taskqueue import get_task_queue_instance
-from ui.property.default_metadata_signal import get_default_metadata_signal_instance
+from ui.property.default_metadata_panel.default_metadata_signal import get_default_metadata_signal_instance
 from services.metadata.metadata import get_metadata
 
 def get_metadata_for_display(path):

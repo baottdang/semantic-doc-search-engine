@@ -9,10 +9,10 @@ SUPPORTED_IMAGE_FORMATS = (
 )
 ALL_SUPPORTED_FORMAT = SUPPORTED_IMAGE_FORMATS + (".pdf",)
 
-# home_dir = os.path.expanduser("~") 
-# index_path = os.path.join(home_dir, "QLenIndex")
+home_dir = os.path.expanduser("~") 
+index_path = os.path.join(home_dir, "QLenIndex")
 
-index_path = r"D:\DEVELOPMENTS\QLenIndex" # Testing index_path, comment this and uncomment the one above when cloned to your system
+# index_path = r"D:\DEVELOPMENTS\QLenIndex" # Testing index_path, comment this and uncomment the one above when cloned to your system
 
 # Ensure index folder always exists
 if not os.path.isdir(index_path):
