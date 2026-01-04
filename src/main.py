@@ -1,10 +1,12 @@
-import sys
 from PySide6 import QtWidgets
 from ui.background.background import BackgroundWidget
 from services.database import database as db
 from services.index import index 
+import multiprocessing, sys
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
+    
     app = QtWidgets.QApplication([])
 
     # Initialize database

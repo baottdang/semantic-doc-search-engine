@@ -1,4 +1,3 @@
-import os
 import sqlite3
 from resources.strings.string_resource import database_path
 

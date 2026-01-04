@@ -1,6 +1,6 @@
 from services.index.index_construct_utils import get_image_np_arr_scaled
 from services.index.feature_extractor.feature_extractor import process_np_array
-from services.index.feature_extractor.visionmodel import get_vision_model_instance
+from services.index.feature_extractor.visionmodel import get_query_vision_model_instance
 from PySide6.QtGui import QImage
 import numpy as np
 import os
@@ -41,7 +41,7 @@ def query_path(file_path, index, database, NPROBE=10, NUM_THREAD=2, NUM_RESULTS=
     vector_arr = get_image_np_arr_scaled(file_path)[0][0] # First page of document
 
     # Obtain the feature extractor model
-    model = get_vision_model_instance()
+    model = get_query_vision_model_instance()
     feature_extractor = model.get_feature_extractor()
     normalize = model.get_normalize()
     feature_vector = process_np_array(vector_arr, feature_extractor, normalize).reshape(1, -1)
@@ -60,7 +60,7 @@ def query_image(qimage, index, database, NPROBE=10, NUM_THREAD=2, NUM_RESULTS=10
     """
     # Obtain the feature extractor model
     img_array = QImageToCvMat(qimage)
-    model = get_vision_model_instance()
+    model = get_query_vision_model_instance()
     feature_extractor = model.get_feature_extractor()
     normalize = model.get_normalize()
 

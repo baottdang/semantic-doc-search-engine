@@ -76,7 +76,7 @@ class CustomTreeModel(QAbstractItemModel):
         if not index.isValid():
             return None
 
-        if role == Qt.DisplayRole:
+        if role in (Qt.DisplayRole, Qt.EditRole):
             item = index.internalPointer()
             return item.data[index.column()]
         return None
@@ -93,3 +93,53 @@ class CustomTreeModel(QAbstractItemModel):
         self.beginResetModel()
         self.rootItem = rootItem
         self.endResetModel()
+
+    def flags(self, index):
+        if not index.isValid() or (index.column() == 1 and len(index.internalPointer().children) != 0):
+            return Qt.ItemIsEnabled
+        return Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
+
+    def setData(self, index, value, role=Qt.EditRole):
+        # Model-driven data change
+        if role == Qt.EditRole:
+            item = index.internalPointer()
+            # Update the TreeItem’s value
+            item.data[index.column()] = value
+            # Emit signal so the view updates
+            self.dataChanged.emit(index, index, [Qt.DisplayRole])
+            return True
+        return False
+    
+    def insertNode(self, row, count, tag, value, parent=QModelIndex()):
+        parent_item = self.rootItem if not parent.isValid() else parent.internalPointer()
+
+        self.beginInsertRows(parent, row, row + count - 1)
+        for i in range(count):
+            # Example: add empty key/value
+            new_item = TreeItem([tag, value], parent_item)
+            parent_item.children.insert(row, new_item)
+        self.endInsertRows()
+        return True
+    
+    def insertRows(self, row, count, parent=QModelIndex()):
+        # Default override to ensure functionality, DO NOT CALL
+        parent_item = self.rootItem if not parent.isValid() else parent.internalPointer()
+
+        self.beginInsertRows(parent, row, row + count - 1)
+        for i in range(count):
+            # Example: add empty key/value
+            new_item = TreeItem(["tag", "value"], parent_item)
+            parent_item.children.insert(row, new_item)
+        self.endInsertRows()
+        return True
+
+    def removeRows(self, row, count, parent=QModelIndex()):
+        parent_item = self.rootItem if not parent.isValid() else parent.internalPointer()
+
+        self.beginRemoveRows(parent, row, row + count - 1)
+        for i in range(count):
+            parent_item.children.pop(row)
+        self.endRemoveRows()
+        return True
+
+

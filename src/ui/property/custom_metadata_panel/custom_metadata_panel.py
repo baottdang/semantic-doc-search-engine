@@ -11,7 +11,6 @@ class CustomMetadataPanel(QtWidgets.QWidget):
         # Components
         self.controller = CustomMetadataController()
         self.treeview = QtWidgets.QTreeView()
-        self.treeview.setRootIsDecorated(True)
 
         self.model = CustomTreeModel(TreeItem(["",[]], None))
 
@@ -32,3 +31,5 @@ class CustomMetadataPanel(QtWidgets.QWidget):
         # Convert dict to TreeItem
         rootItem = TreeItem(["Custom", meta_dict])
         self.model.set_root(rootItem)
+
+    

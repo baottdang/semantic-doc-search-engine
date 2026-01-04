@@ -29,10 +29,18 @@ class VisionModel:
         return self._feature_extractor
     
 # Singleton instance of VisionModel
-_vision_model = None
+_index_vision_model = None
+_query_vision_model = None
 
-def get_vision_model_instance():
-    global _vision_model
-    if _vision_model is None:
-        _vision_model = VisionModel()
-    return _vision_model
+def get_index_vision_model_instance():
+    global _index_vision_model
+    if _index_vision_model is None:
+        _index_vision_model = VisionModel()
+    return _index_vision_model
+
+def get_query_vision_model_instance():
+    global _query_vision_model
+    if _query_vision_model is None:
+        _query_vision_model = VisionModel()
+    return _query_vision_model
+
