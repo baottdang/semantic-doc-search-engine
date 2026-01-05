@@ -23,7 +23,7 @@ def QImageToCvMat(incomingImage):
     # Reshape into (height, width, 3)
     arr = arr.reshape((height, width, 3))
 
-    arr_resized = cv2.resize(arr, (224, 224), interpolation=cv2.INTER_AREA)
+    arr_resized = cv2.resize(arr, (224, 224), interpolation=cv2.INTER_LINEAR)
     return arr_resized
 
 def query_path(file_path, index, database, NPROBE=10, NUM_THREAD=2, NUM_RESULTS=10):

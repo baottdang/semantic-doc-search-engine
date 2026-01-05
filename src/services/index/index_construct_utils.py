@@ -83,7 +83,7 @@ def get_image_np_arr_scaled(file, dpi=96):
             bgr_arr = imread_unicode(file)
             if bgr_arr is None:
                 return None
-            bgr_arr_re = cv2.resize(bgr_arr, (224, 224), interpolation=cv2.INTER_AREA)
+            bgr_arr_re = cv2.resize(bgr_arr, (224, 224), interpolation=cv2.INTER_LINEAR)
             np_array = cv2.cvtColor(bgr_arr_re, cv2.COLOR_BGR2RGB)
             if np_array is not None:
                 arrays.append(np_array)
@@ -91,7 +91,7 @@ def get_image_np_arr_scaled(file, dpi=96):
             for arr_rgb in pdfium_wrapper.render_doc(file, 0, 0, dpi):
                 if arr_rgb is not None:
                     # Drop alpha, convert BGRA → RGB
-                    np_array = cv2.resize(arr_rgb, (224, 224), interpolation=cv2.INTER_AREA)
+                    np_array = cv2.resize(arr_rgb, (224, 224), interpolation=cv2.INTER_LINEAR)
                     arrays.append(np_array)          
     except Exception as e:
         print(f"Error with {file}: {e}")
@@ -135,3 +135,13 @@ def path_to_dbname(path):
     safe_base = "".join(c if c.isalnum() else "_" for c in base)
     hash_suffix = hashlib.md5(path.encode()).hexdigest()[:8]
     return f"{safe_base}_{hash_suffix}"
+
+def write_index(index, idx_path):
+    """
+    Offloader to avoid faiss loading for each process
+    
+    :param index: Index to write
+    :param idx_path: Path to write index
+    """
+    import faiss
+    faiss.write_index(index, idx_path)

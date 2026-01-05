@@ -5,8 +5,6 @@
 def construct_index(folder_path):
     """Construct an index from the files in the given folder path."""
     import os
-    import numpy as np
-    import faiss
     import time
     import services.index.feature_extractor.visionmodel as vm
     import services.index.index_construct_utils as utils
@@ -58,50 +56,54 @@ def construct_index(folder_path):
     signal = get_construct_signal_instance()
 
     # Loop through each batch of file in the folder tree
-    for paths in utils.search_folder_tree(f_address=folder_path, root_level=True, bucket=bucket, BATCH_SIZE=BATCH_SIZE):
-        with ProcessPoolExecutor(max_workers=os.cpu_count() // 2) as executor:
+    with ProcessPoolExecutor(max_workers=os.cpu_count() // 2) as executor:
+        for paths in utils.search_folder_tree(f_address=folder_path, root_level=True, bucket=bucket, BATCH_SIZE=BATCH_SIZE):
+
+            # Multiprocessing file vectorization process
             np_arr_packages = list(filter(None, executor.map(utils.get_image_np_arr_scaled, paths)))
-        
-        # If no valid np arrays were returned, skip this batch
-        if not np_arr_packages:
-            continue
 
-        # Unpack the return package into vectors and paths
-        np_arr_tuple, paths = zip(*np_arr_packages)
-        np_arrays =  list(chain.from_iterable(np_arr_tuple))
+            # If no valid np arrays were returned, skip this batch
+            if not np_arr_packages:
+                continue
 
-        # Write entries to SQLite metadata db
-        ids = []
-        for arr_tuples_list, path in zip(np_arr_tuple, paths):
-            for page in range(1,len(arr_tuples_list)+1):
-                ids.append(next_id)
-                database.add_index_entry(next_id, index_name, path, page, commit=False)
-                next_id += 1
-                vector_count += 1
+            # Unpack the return package into vectors and paths
+            np_arr_tuple, paths = zip(*np_arr_packages)
+            np_arrays =  list(chain.from_iterable(np_arr_tuple))
 
-        # Train and add all features to index
-        train_batch = []
-        id_ptr = 0
-        # Process this batch of vectors into feature vectors, if index isn't trained, train it and add all feature vectors to index 
-        for features in process_np_arrays(np_arrays=np_arrays, feature_extractor=feature_extractor, normalize=normalize, TENSOR_BATCH_SIZE=TENSOR_BATCH_SIZE):
-            if not index_is_trained:
-                train_batch.append(features)
-                # If feature vectors exceed the training threshold, train the index
-                if sum(f.shape[0] for f in train_batch) >= TRAIN_THRESHOLD:
-                    # Concatenate first n samples
-                    train_data = np.vstack(train_batch)[:TRAIN_THRESHOLD]
-                    index.train(train_data)
-                    index_is_trained = True
+            # Write entries to SQLite metadata db
+            ids = []
+            for arr_tuples_list, path in zip(np_arr_tuple, paths):
+                for page in range(1,len(arr_tuples_list)+1):
+                    ids.append(next_id)
+                    database.add_index_entry(next_id, index_name, path, page, commit=False)
+                    next_id += 1
+                    vector_count += 1
 
-                    full_buf = np.vstack(train_batch)
-                    n = full_buf.shape[0]
-                    index.add_with_ids(full_buf, np.array(ids[id_ptr:id_ptr+n], dtype=np.int64))
+            # Train and add all features to index
+            import numpy as np
+
+            train_batch = []
+            id_ptr = 0
+            # Process this batch of vectors into feature vectors, if index isn't trained, train it and add all feature vectors to index 
+            for features in process_np_arrays(np_arrays=np_arrays, feature_extractor=feature_extractor, normalize=normalize, TENSOR_BATCH_SIZE=TENSOR_BATCH_SIZE):
+                if not index_is_trained:
+                    train_batch.append(features)
+                    # If feature vectors exceed the training threshold, train the index
+                    if sum(f.shape[0] for f in train_batch) >= TRAIN_THRESHOLD:
+                        # Concatenate first n samples
+                        train_data = np.vstack(train_batch)[:TRAIN_THRESHOLD]
+                        index.train(train_data)
+                        index_is_trained = True
+
+                        full_buf = np.vstack(train_batch)
+                        n = full_buf.shape[0]
+                        index.add_with_ids(full_buf, np.array(ids[id_ptr:id_ptr+n], dtype=np.int64))
+                        id_ptr += n
+                        train_batch.clear()
+                else:
+                    n = features.shape[0]
+                    index.add_with_ids(features, np.array(ids[id_ptr:id_ptr+n], dtype=np.int64))
                     id_ptr += n
-                    train_batch.clear()
-            else:
-                n = features.shape[0]
-                index.add_with_ids(features, np.array(ids[id_ptr:id_ptr+n], dtype=np.int64))
-                id_ptr += n
 
     # Check database size, database must contain at least 400 files, discard if too small
     if vector_count <= 400:
@@ -113,7 +115,7 @@ def construct_index(folder_path):
 
     # Write index to disk
     idx_path = os.path.join(index_path, f"{index_name}.index")
-    faiss.write_index(index, idx_path)
+    utils.write_index(index, idx_path)
 
     # Commit to database
     database.add_database_info(index_name, database_path=folder_path, index_path=idx_path)

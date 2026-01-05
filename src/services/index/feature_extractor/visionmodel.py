@@ -1,9 +1,13 @@
-import torch
-import torchvision.transforms as transforms
-from torchvision.models import mobilenet_v3_small, MobileNet_V3_Small_Weights
-
 class VisionModel:
     def __init__(self):
+        #IMPORTANT!
+        # LARGE DEPENDENCIES SUCH AS TORCH MUST BE IMPORTED INSIDE FUNCTIONS
+        # THAT GET TOUCHED BY MULTIPROCESSING TO AVOID MEM BLOW UP#
+        
+        import torch
+        import torchvision.transforms as transforms
+        from torchvision.models import mobilenet_v3_small, MobileNet_V3_Small_Weights
+
         self._model = mobilenet_v3_small(weights=MobileNet_V3_Small_Weights.DEFAULT)
         self._model.eval()
 
