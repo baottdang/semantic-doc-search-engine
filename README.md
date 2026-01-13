@@ -39,6 +39,9 @@
 
 - Graphical User Interface: PySide6.
 
+## Download
+- [v0.5.0-prealpha (Google Drive)](https://drive.google.com/file/d/1qghXZ954oCXFX_ZiPNX7o-7ALfvgrokh/view?usp=sharing)
+
 ## Setup
 
 - To start the app, simply clone it to your system, (preferably) inside a virtual environment.
