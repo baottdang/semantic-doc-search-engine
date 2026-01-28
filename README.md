@@ -6,6 +6,13 @@
 
 - This project was built with user experience in mind, from human interactions to performance, the structure was tuned to run on most consumer systems, laptops included.
 
+## Preview
+<img width="1919" height="1030" alt="searching" src="https://github.com/user-attachments/assets/2dfa248d-3fc6-4e25-9c6f-ff0f92f46c9b" />
+- At query
+
+<img width="1919" height="1032" alt="index_add" src="https://github.com/user-attachments/assets/f27a66d3-7b0c-4e71-809a-656372790a2e" />
+- At adding new database
+
 ## Key Features
 
 - AI-leveraged search engine: Allowing for semantic based queries, where the user can initiate searches using real contents such as images or PDF files, and the returned results will be either exact matches of the query if found, or similar in contents.
@@ -31,6 +38,9 @@
 - Database: SQLite.
 
 - Graphical User Interface: PySide6.
+
+## Download
+- [v0.5.0-prealpha (Google Drive)](https://drive.google.com/file/d/1qghXZ954oCXFX_ZiPNX7o-7ALfvgrokh/view?usp=sharing)
 
 ## Setup
 
