@@ -22,7 +22,7 @@ class ActionJournal:
                 old_path TEXT,
                 new_path TEXT,
                 index_name TEXT,
-                processed INTEGER,
+                processed INTEGER
             )
             """
         )
