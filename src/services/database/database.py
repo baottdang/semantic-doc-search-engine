@@ -42,7 +42,8 @@ class Database:
             )
             """
         )
-        self.commit()
+        self._conn.commit()
+        self.commit
 
     def get_next_index_id(self):
         """Get the next available index ID for a new entry."""
@@ -54,7 +55,7 @@ class Database:
     def add_index_entry(self, index_id, index_name, path, page, commit=False):
         self._cursor.execute("INSERT OR REPLACE INTO index_entries (index_id, index_name, path, page) VALUES (?, ?, ?, ?)", (index_id, index_name, path, page))
         if commit:
-            self.commit()
+            self._conn.commit()
 
     def get_index_entry(self, id):
         self._cursor.execute("SELECT * FROM index_entries WHERE index_id = ?", (id,))
@@ -68,11 +69,19 @@ class Database:
 
     def add_database_info(self, name, database_path, index_path):
         self._cursor.execute("INSERT OR REPLACE INTO index_info (index_name, index_path, database_path) VALUES (?, ?, ?)", (name, index_path, database_path))
-        self.commit()
+        self._conn.commit()
 
     def get_indices(self):
         self._cursor.execute("SELECT * FROM index_info")
         return self._cursor.fetchall()
+    
+    def remove_file(self, path):
+        self._cursor.execute("DELETE FROM index_entries WHERE path = ?", (path,))
+        self._conn.commit()
+
+    def update_file(self, old_path, new_path):
+        self._cursor.execute("UPDATE index_entries SET path = ? WHERE path = ?", (new_path, old_path))
+        self._conn.commit()
 
 # Singleton instance of Database
 _db = None

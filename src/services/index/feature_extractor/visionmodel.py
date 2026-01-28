@@ -35,6 +35,7 @@ class VisionModel:
 # Singleton instance of VisionModel
 _index_vision_model = None
 _query_vision_model = None
+_watchdog_vision_model = None
 
 def get_index_vision_model_instance():
     global _index_vision_model
@@ -47,4 +48,10 @@ def get_query_vision_model_instance():
     if _query_vision_model is None:
         _query_vision_model = VisionModel()
     return _query_vision_model
+
+def get_watchdog_vision_model_instance():
+    global _watchdog_vision_model
+    if _watchdog_vision_model is None:
+        _watchdog_vision_model = VisionModel()
+    return _watchdog_vision_model
 

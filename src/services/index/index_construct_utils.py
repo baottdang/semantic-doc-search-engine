@@ -143,5 +143,10 @@ def write_index(index, idx_path):
     :param index: Index to write
     :param idx_path: Path to write index
     """
+    from ui.error.error_signal import get_error_signal_instance
     import faiss
-    faiss.write_index(index, idx_path)
+    try:
+        faiss.write_index(index, idx_path)
+    except Exception as e:
+        error_instance = get_error_signal_instance()
+        error_instance.error_signal.emit("Index Error", "Couldn't write index.")
