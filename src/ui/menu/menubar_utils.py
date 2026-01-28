@@ -21,6 +21,8 @@ def on_add_index():
 @Slot()
 def on_setting_clicked():
     global setting_window
-    if setting_window is None:
-        setting_window = SettingWindow()
+    if setting_window is not None:
+        setting_window = None 
+    setting_window = SettingWindow()
     setting_window.show()
+    return setting_window

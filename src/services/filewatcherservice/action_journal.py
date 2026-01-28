@@ -34,6 +34,7 @@ class ActionJournal:
             """
         )
         conn.commit()
+        conn.close()
 
     def add_change(self, op_code, old_path="", new_path="", index_name=""):
         """
@@ -50,6 +51,7 @@ class ActionJournal:
         cursor.execute("INSERT INTO action_journal (op_code, old_path, new_path, index_name, processed) VALUES (?, ?, ?, ?, ?)", (op_code, old_path, new_path, index_name, 0))
         try:
             conn.commit()
+            conn.close()
         except Exception as e:
             pass
 
@@ -84,6 +86,7 @@ class ActionJournal:
 
         try:
             conn.commit()
+            conn.close()
         except Exception as e:
             pass
 

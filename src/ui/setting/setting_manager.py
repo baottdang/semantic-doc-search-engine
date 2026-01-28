@@ -24,6 +24,7 @@ class SettingManager:
                 self.remove_wd_from_startup()
 
     def add_wd_to_startup(self):
+        error_occured = False
         try:
             with winreg.OpenKey(
                 winreg.HKEY_CURRENT_USER,
@@ -41,20 +42,25 @@ class SettingManager:
                     winreg.SetValueEx(key, wdname, 0, winreg.REG_SZ, wdpath)
         except FileNotFoundError:
             self.error_instance.error_signal.emit("Registry Error", "Registry path not found.")
+            error_occured = True
         except PermissionError:
             self.error_instance.error_signal.emit("Registry Error", "Permission denied. Try running as administrator.")
+            error_occured = True
         except OSError as e:
             self.error_instance.error_signal.emit("Registry Error", f"Unexpected error: {e}")
-        except Exception as e:
-            config = configparser.ConfigParser()
-            config.read(config_path)
-            if "filewatcher" in config:
-                config["filewatcher"]["enabled"] = "False"
-                with open(config_path, "w") as f:
-                    self.config.write(f)
+            error_occured = True
+        finally:
+            if error_occured:
+                config = configparser.ConfigParser()
+                config.read(config_path)
+                if "filewatcher" in config:
+                    config["filewatcher"]["enabled"] = "False"
+                    with open(config_path, "w") as f:
+                        config.write(f)
 
     def remove_wd_from_startup(self):
         reg_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
+        error_occured = False
         try:
             with winreg.OpenKey(
                 winreg.HKEY_CURRENT_USER,
@@ -65,17 +71,21 @@ class SettingManager:
                 winreg.DeleteValue(key, wdname)
         except FileNotFoundError:
             self.error_instance.error_signal.emit("Registry Error", f"No startup entry named '{wdname}' found.")
+            error_occured = True
         except PermissionError:
             self.error_instance.error_signal.emit("Registry Error", "Permission denied. Try running as administrator.")
+            error_occured = True
         except OSError as e:
             self.error_instance.error_signal.emit("Registry Error", f"Unexpected error: {e}")
-        except Exception as e:
-            config = configparser.ConfigParser()
-            config.read(config_path)
-            if "filewatcher" in config:
-                config["filewatcher"]["enabled"] = "True"
-                with open(config_path, "w") as f:
-                    self.config.write(f)
+            error_occured = True
+        finally:
+            if error_occured:
+                config = configparser.ConfigParser()
+                config.read(config_path)
+                if "filewatcher" in config:
+                    config["filewatcher"]["enabled"] = "True"
+                    with open(config_path, "w") as f:
+                        config.write(f)
 
 
         
