@@ -138,7 +138,7 @@ def construct_index(folder_path):
 
 def add_files_to_indices(file_packages):
     from services.database import database as db
-    from resources.strings.string_resource import database_path, index_path
+    from resources.strings.string_resource import database_path
     from services.index.feature_extractor.visionmodel import get_watchdog_vision_model_instance
     from services.index.index import get_index_instance
     from services.index.feature_extractor.feature_extractor import process_np_arrays
@@ -146,7 +146,6 @@ def add_files_to_indices(file_packages):
     from ui.error.error_signal import get_error_signal_instance
     import services.index.index_construct_utils as utils
     import numpy as np
-    import faiss, os
 
     TENSOR_BATCH_SIZE = 128
 
@@ -166,44 +165,48 @@ def add_files_to_indices(file_packages):
 
     arr_per_index = {}
     ids_per_index = {}
-    for file, index_name in file_packages:
+    for file, database_path in file_packages:
         np_arrs, path = utils.get_image_np_arr_scaled(file)
+        idx_name = database.get_index_info(database_path=database_path)[1]
+        if idx_name != "":
+            if idx_name not in arr_per_index: 
+                arr_per_index[idx_name] = []
+            arr_per_index[idx_name].extend(np_arrs) # Sort np arrays according to their index
 
-        if index_name not in arr_per_index: 
-            arr_per_index[index_name] = []
-        arr_per_index[index_name].extend(np_arrs) # Sort np arrays according to their index
+            # Write entries to SQLite metadata db
+            if idx_name not in ids_per_index:
+                ids_per_index[idx_name] = []
 
-        # Write entries to SQLite metadata db
-        if index_name not in ids_per_index:
-            ids_per_index[index_name] = []
-
-        for page in range(1,len(np_arrs)+1):
-            ids_per_index[index_name].append(next_id)
-            database.add_index_entry(next_id, index_name, path, page, commit=False)
-            next_id += 1
+            for page in range(1,len(np_arrs)+1):
+                ids_per_index[idx_name].append(next_id)
+                database.add_index_entry(next_id, idx_name, path, page, commit=False)
+                next_id += 1
 
     # Process this batch of vectors into feature vectors, if index isn't trained, train it and add all feature vectors to index 
-    for index_name, np_arrs in arr_per_index.items():
-        index = index_instance.get_index(index_name)
-        id_ptr = 0
-        for features in process_np_arrays(np_arrays=np_arrs, feature_extractor=feature_extractor, normalize=normalize, TENSOR_BATCH_SIZE=TENSOR_BATCH_SIZE):
-            n = features.shape[0]
+    for idx_name, np_arrs in arr_per_index.items():
+        index_info = database.get_index_info(index_name=idx_name)
+        if index_info is not None:
+            database_path = index_info[3]
+            index = index_instance.get_index(database_path)
+            id_ptr = 0
+            for features in process_np_arrays(np_arrays=np_arrs, feature_extractor=feature_extractor, normalize=normalize, TENSOR_BATCH_SIZE=TENSOR_BATCH_SIZE):
+                n = features.shape[0]
 
-            # Add to index with lock
-            lock_instance.acquire_write()
-            try:
-                index.add_with_ids(features, np.array(ids_per_index[index_name][id_ptr:id_ptr+n], dtype=np.int64))
-            finally:
-                lock_instance.release_write()
+                # Add to index with lock
+                lock_instance.acquire_write()
+                try:
+                    index.add_with_ids(features, np.array(ids_per_index[idx_name][id_ptr:id_ptr+n], dtype=np.int64))
+                finally:
+                    lock_instance.release_write()
 
-            id_ptr += n
+                id_ptr += n
 
-        idx_path = os.path.join(index_path, f"{index_name}.index")
+        idx_path = index_info[2]
 
         # Write index with lock
         lock_instance.acquire_write()
         try:
-            faiss.write_index(index, idx_path)
+            utils.write_index(index, idx_path)
         finally:
             lock_instance.release_write()
 

@@ -19,9 +19,9 @@ class IndexerService:
         new_files = []
         ids = []
         for action in actions:
-            id, op_code, old_path, new_path, index_name = action
+            id, op_code, old_path, new_path, folder_path = action
             if op_code == 0: # File added
-                new_files.append((new_path, index_name))
+                new_files.append((new_path, folder_path))
             elif op_code == 1: # File deleted
                 self.database.remove_file(old_path)
             elif op_code == 2: # File moved (or renamed)
@@ -42,7 +42,7 @@ class IndexerService:
         while(True):
             actions = self.journal.get_unprocessed_actions()
             if len(actions) == 0:
-                time.sleep(2)
+                time.sleep(3)
             else:
                 self.process_actions(actions)
 

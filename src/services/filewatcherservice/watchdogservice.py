@@ -104,4 +104,3 @@ class WatchDog:
 
 # if __name__ == "__main__":
 #     wd = WatchDog()
-#     wd.run_tray()

@@ -60,6 +60,15 @@ class Database:
     def get_index_entry(self, id):
         self._cursor.execute("SELECT * FROM index_entries WHERE index_id = ?", (id,))
         return self._cursor.fetchone()
+    
+    def get_index_info(self, index_name="", index_path="", database_path=""):
+        if index_name != "":
+            self._cursor.execute("SELECT * FROM index_info WHERE index_name = ?", (index_name,))
+        elif index_path != "":
+            self._cursor.execute("SELECT * FROM index_info WHERE index_path = ?", (index_path,))
+        elif database_path != "":
+            self._cursor.execute("SELECT * FROM index_info WHERE database_path = ?", (database_path,))
+        return self._cursor.fetchone()
 
     def commit(self):
         self._conn.commit()

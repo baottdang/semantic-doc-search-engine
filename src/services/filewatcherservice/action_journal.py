@@ -21,7 +21,7 @@ class ActionJournal:
                 op_code INTEGER,
                 old_path TEXT,
                 new_path TEXT,
-                index_name TEXT,
+                folder_path TEXT,
                 processed INTEGER
             )
             """
@@ -36,7 +36,7 @@ class ActionJournal:
         conn.commit()
         conn.close()
 
-    def add_change(self, op_code, old_path="", new_path="", index_name=""):
+    def add_change(self, op_code, old_path="", new_path="", folder_path=""):
         """
         Record file changes to journal, leave old_path blank when ADD, leave new_path blank when DELETE. 
 
@@ -48,7 +48,7 @@ class ActionJournal:
         conn.execute("PRAGMA journal_mode = WAL;")
         conn.execute("PRAGMA synchronous = NORMAL;")
 
-        cursor.execute("INSERT INTO action_journal (op_code, old_path, new_path, index_name, processed) VALUES (?, ?, ?, ?, ?)", (op_code, old_path, new_path, index_name, 0))
+        cursor.execute("INSERT INTO action_journal (op_code, old_path, new_path, folder_path, processed) VALUES (?, ?, ?, ?, ?)", (op_code, old_path, new_path, folder_path, 0))
         try:
             conn.commit()
             conn.close()
@@ -62,9 +62,9 @@ class ActionJournal:
         conn.execute("PRAGMA journal_mode = WAL;")
         conn.execute("PRAGMA synchronous = NORMAL;")
 
-        conn.execute(
+        cur.execute(
             """
-            SELECT id, op_code, old_path, new_path, index_name
+            SELECT id, op_code, old_path, new_path, folder_path
             FROM action_journal
             WHERE processed = 0
             ORDER BY id
@@ -76,13 +76,14 @@ class ActionJournal:
     
     def mark_processed(self, ids):
         conn = sqlite3.connect(journal_path)
+        cur = conn.cursor()
 
         conn.execute("PRAGMA journal_mode = WAL;")
         conn.execute("PRAGMA synchronous = NORMAL;")
 
         placeholders = ",".join("?" for _ in ids)
 
-        conn.execute(f"UPDATE FROM action_journal SET processed = 1 WHERE id IN ({placeholders})", ids)
+        cur.execute(f"UPDATE action_journal SET processed = 1 WHERE id IN ({placeholders})", ids)
 
         try:
             conn.commit()

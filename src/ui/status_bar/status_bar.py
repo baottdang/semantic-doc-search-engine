@@ -48,7 +48,7 @@ class StatusBar(QtWidgets.QStatusBar):
 
     @Slot()
     def show_files_added(self, num_of_files):
-        self.show_message(f"Detected and added {num_of_files} to database.")
+        self.show_message(f"Detected and added {num_of_files} files to database.")
 
     def show_message(self, msg, time=4000):
         self.clearMessage()

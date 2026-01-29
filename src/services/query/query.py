@@ -86,6 +86,7 @@ def get_similar_vectors(query, index, database, NPROBE=10, NUM_THREAD=2, NUM_RES
     lock_instance = get_lock_instance()
 
     if index:
+        print(index.ntotal)
         index.nprobe = NPROBE
         faiss.omp_set_num_threads(NUM_THREAD)
 

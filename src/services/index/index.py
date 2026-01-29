@@ -24,13 +24,13 @@ class Index():
                 error_instance.error_signal.emit("Index Error", f"Could not find index of {database_path}")
                 continue
 
-    def get_index(self, path):
+    def get_index(self, database_path):
         """
         Return the index using its path
         
         :param path: path of index
         """
-        return self.indices[path]
+        return self.indices[database_path]
     
     def add_new_index_to_mem(self, index, database_path):
         self.indices[database_path] = index
