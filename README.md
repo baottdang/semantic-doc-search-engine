@@ -25,9 +25,7 @@
 
 - Screen capture: Apart from querying with the usual path to file approach, the user can also quickly look up anything on the screen using the built-in screenshot feature.
 
-- Metadata editing (In development): Returned results can also be injected with custom XMP metadata, in which the user can import, export and edit their own metadata directly into a file with an editor that smartly records snapshots allowing for quick turnarounds and redos in case of mistakes.
-
-- Live file tracking (In development): The application can automatically mark new file additions, edits or removals to update the database, strongly embracing the **"Index once, run forever"** philosophy.
+- Live file tracking: The application can automatically mark new file additions, edits or removals to update the database, strongly embracing the **"Index once, run forever"** philosophy.
 
 ## Tech stack:
 
