@@ -40,7 +40,7 @@
 - Graphical User Interface: PySide6.
 
 ## Download
-- [v0.5.0-prealpha (Google Drive)](https://drive.google.com/file/d/1qghXZ954oCXFX_ZiPNX7o-7ALfvgrokh/view?usp=sharing)
+- [v0.9.0-prealpha (Google Drive)](https://drive.google.com/file/d/1a8AzgRNdeY9cf0ov_GcsM2LZDfiq9R_C/view?usp=sharing)
 
 ## Setup
 
