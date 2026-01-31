@@ -1,10 +1,10 @@
 from pathlib import Path
 from PySide6.QtCore import Slot
 from PySide6 import QtWidgets
-from ui.index_setup.index_setup_utils import is_child_of_indexed, is_indexed, done_setup
+from ui.index_manager.index_add.index_setup_utils import is_child_of_indexed, is_indexed, done_setup
 from src.services.index.index_construct import construct_index
 from services.threads import taskqueue as tq
-import ui.index_setup.index_setup_signal as signal
+import ui.index_manager.index_add.index_setup_signal as signal
 import services.index.index_construct_signal as construct_signal
 
 class IndexSetupWidget(QtWidgets.QWidget):

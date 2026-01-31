@@ -34,6 +34,10 @@ class Index():
     
     def add_new_index_to_mem(self, index, database_path):
         self.indices[database_path] = index
+
+    def remove_index_list(self, database_path):
+        # Note that index is still in mem to avoid complications with query
+        self.indices.pop(database_path, None)
     
 # Singleton instance
 index = None

@@ -8,6 +8,7 @@ from ui.searchbox import searchbox_utils as utils
 import services.index.index_construct_signal as construct_signal
 from ui.screenshotcapture.screencapture import ScreenCapture
 from ui.searchbox.searchbox_signal import get_searchbox_signal_instance
+from ui.index_manager.index_view.listview import get_listview_signal_instance
 from resources.strings.string_resource import SUPPORTED_IMAGE_FORMATS
 import os
 
@@ -151,6 +152,9 @@ class DatabaseSearchBoxWidget(QtWidgets.QWidget):
         self.construct_signal = construct_signal.get_construct_signal_instance()
         self.construct_signal.construct_complete_signal.connect(self.update_database_selection)
 
+        self.listview_signal_instance = get_listview_signal_instance()
+        self.listview_signal_instance.database_delete_signal.connect(self.remove_database_from_selection)
+
         # Layout setup
         self.layout = QtWidgets.QHBoxLayout()
         self.layout.setSpacing(0)
@@ -159,6 +163,9 @@ class DatabaseSearchBoxWidget(QtWidgets.QWidget):
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.folderbox)
         self.setLayout(self.layout)
+
+    def remove_database_from_selection(self, database_path):
+        self.folderbox.removeItem(self.folderbox.findText(database_path))
 
     def get_selected_database(self):
         return self.folderbox.currentText()

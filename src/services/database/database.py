@@ -88,6 +88,13 @@ class Database:
         self._cursor.execute("DELETE FROM index_entries WHERE path = ?", (path,))
         self._conn.commit()
 
+    def delete_indexed_database(self, database_path):
+        index_info = self.get_index_info(database_path=database_path)
+        index_name = index_info[1]
+        self._cursor.execute("DELETE FROM index_info WHERE database_path = ?", (database_path,))
+        self._cursor.execute("DELETE FROM index_entries WHERE index_name = ?", (index_name,))
+        self._conn.commit()
+
     def update_file(self, old_path, new_path):
         self._cursor.execute("UPDATE index_entries SET path = ? WHERE path = ?", (new_path, old_path))
         self._conn.commit()

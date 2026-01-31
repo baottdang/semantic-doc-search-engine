@@ -7,7 +7,7 @@ class MenuBarWidget(QtWidgets.QMenuBar):
         
         # Init menus
         self.file_menu = self.addMenu("File")
-        self.index_menu = self.addMenu("Index")
+        self.database_menu = self.addMenu("Database")
         self.setting_menu = self.addMenu("Setting")
         self.help_menu = self.addMenu("Help")
         self.about_menu = self.addMenu("About")
@@ -17,10 +17,9 @@ class MenuBarWidget(QtWidgets.QMenuBar):
         self.file_exit_action.triggered.connect(menubar_utils.on_file_exit)
 
         # Add actions to Index menu
-        self.index_add_action = self.index_menu.addAction("Add Index")
-        self.index_delete_action = self.index_menu.addAction("Delete Index")
-        self.index_add_action.triggered.connect(menubar_utils.on_add_index)
+        self.database_action = self.database_menu.addAction("Manage Databases")
+        self.database_action.triggered.connect(menubar_utils.on_database_clicked)
 
         # Add action to Setting menu
-        self.setting_action = self.setting_menu.addAction("Manage settings")
+        self.setting_action = self.setting_menu.addAction("Manage Settings")
         self.setting_action.triggered.connect(menubar_utils.on_setting_clicked)

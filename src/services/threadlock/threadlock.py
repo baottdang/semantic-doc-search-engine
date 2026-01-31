@@ -28,7 +28,7 @@ class RWLock:
 # Singleton instance
 rwlock = None
 
-def get_lock_instance():
+def get_index_rw_lock_instance():
     global rwlock
     if rwlock is None:
         rwlock = RWLock()

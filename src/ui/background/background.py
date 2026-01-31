@@ -1,5 +1,6 @@
 from PySide6.QtCore import Qt
 from PySide6 import QtWidgets
+from PySide6.QtGui import QIcon
 from ui.menu.menubar import MenuBarWidget
 from ui.searchbox.searchbox import SearchBoxWidget, SearchBoxWidget
 from ui.sidebar.sidebar import SidebarWidget
@@ -14,6 +15,7 @@ class BackgroundWidget(QtWidgets.QMainWindow):
         super().__init__(parent)
         self.setWindowTitle(resources.strings.string_resource.app_name)
         self.setMinimumSize(800, 600)
+        self.setWindowIcon(QIcon(resources.strings.string_resource.icon_path))
 
         # Add menu bar
         self.menu_bar = MenuBarWidget(self)

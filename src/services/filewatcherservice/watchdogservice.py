@@ -1,7 +1,8 @@
-import time, os
+import time, os, threading
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from services.filewatcherservice.action_journal import ActionJournal
+from ui.index_manager.index_view.listview_signal import get_listview_signal_instance
 from resources.strings.string_resource import ALL_SUPPORTED_FORMAT, icon_path
 from services.database.database import get_main_database_instance
 from services.filewatcherservice.action_queue import get_action_queue_instance
@@ -68,8 +69,15 @@ class WatchDog:
         self.db = get_main_database_instance()
         self.fpaths = self.db.get_indexed_database_paths()
 
+        # Signals
         self.update_signal_instance = get_construct_signal_instance()
         self.update_signal_instance.construct_complete_signal.connect(self.update_watch_list)
+
+        self.listview_signal_instance = get_listview_signal_instance()
+        self.listview_signal_instance.database_delete_signal.connect(self.remove_from_watch)
+
+        # Map of handlers and fpaths 
+        self.event_handlers = {} 
 
     def start(self):
         self.observer = Observer()
@@ -77,6 +85,7 @@ class WatchDog:
         for fpath in self.fpaths:
             if os.path.exists(fpath):
                  event_handler = FileEventHandler(fpath)
+                 self.event_handlers[fpath] = event_handler
                  self.observer.schedule(event_handler, path=fpath, recursive=True)
 
         self.observer.start()
@@ -93,6 +102,10 @@ class WatchDog:
         event_handler = FileEventHandler(index_path)
         self.observer.schedule(event_handler, path=index_path, recursive=True)
 
+    @Slot()
+    def remove_from_watch(self, database_path):
+        self.observer.unschedule(self.event_handlers[database_path])
+
     def run_tray(self):
         import pystray
 
@@ -102,5 +115,11 @@ class WatchDog:
         )
         icon.run() 
 
-# if __name__ == "__main__":
-#     wd = WatchDog()
+    def load_tray_thread(self):
+        t = threading.Thread(target=self.run_tray, daemon=True, name="WatchdogTrayThread")
+        t.start()
+
+if __name__ == "__main__":
+    wd = WatchDog()
+    wd.load_tray_thread()
+    wd.start()

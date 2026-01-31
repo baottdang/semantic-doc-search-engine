@@ -30,7 +30,7 @@ class DefaultMetadataPanel(QtWidgets.QWidget):
         self.setLayout(self.layout)
 
     def display_default_metadata(self, meta_dict):
-        self.model.removeRows(0, self.model.rowCount())
+        self.model.removeRows(0, self.model.rowCount()) # Clear old data
         for tag, value in meta_dict.items():
             tag_item = QStandardItem(tag)
             value_item = QStandardItem(value)

@@ -79,14 +79,13 @@ def get_similar_vectors(query, index, database, NPROBE=10, NUM_THREAD=2, NUM_RES
     :param NUM_THREAD: Number of threads to perform the query
     :param NUM_RESULTS: Number of returned results
     """
-    from services.threadlock.threadlock import get_lock_instance
+    from services.threadlock.threadlock import get_index_rw_lock_instance
     import faiss
     
     results = []
-    lock_instance = get_lock_instance()
+    lock_instance = get_index_rw_lock_instance()
 
     if index:
-        print(index.ntotal)
         index.nprobe = NPROBE
         faiss.omp_set_num_threads(NUM_THREAD)
 

@@ -1,6 +1,6 @@
 from PySide6.QtCore import Slot
 from PySide6 import QtWidgets
-from ui.index_setup.index_setup import IndexSetupWidget
+from ui.index_manager.index_manager_widget import IndexManagerWindow
 from ui.setting.setting_window import SettingWindow
 
 # Store single instances of windows to be reused later
@@ -12,10 +12,10 @@ def on_file_exit():
     QtWidgets.QApplication.instance().quit()
 
 @Slot()
-def on_add_index():
+def on_database_clicked():
     global index_window
     if index_window is None:
-        index_window = IndexSetupWidget()
+        index_window = IndexManagerWindow()
     index_window.show()
 
 @Slot()

@@ -142,7 +142,7 @@ def add_files_to_indices(file_packages):
     from services.index.feature_extractor.visionmodel import get_watchdog_vision_model_instance
     from services.index.index import get_index_instance
     from services.index.feature_extractor.feature_extractor import process_np_arrays
-    from services.threadlock.threadlock import get_lock_instance
+    from services.threadlock.threadlock import get_index_rw_lock_instance
     from ui.error.error_signal import get_error_signal_instance
     import services.index.index_construct_utils as utils
     import numpy as np
@@ -152,7 +152,7 @@ def add_files_to_indices(file_packages):
     database = db.Database(database_path)
 
     # Get lock
-    lock_instance = get_lock_instance()
+    lock_instance = get_index_rw_lock_instance()
 
     # Get vision model instance
     model_inst = get_watchdog_vision_model_instance()
@@ -167,11 +167,13 @@ def add_files_to_indices(file_packages):
     ids_per_index = {}
     for file, database_path in file_packages:
         np_arrs, path = utils.get_image_np_arr_scaled(file)
-        idx_name = database.get_index_info(database_path=database_path)[1]
-        if idx_name != "":
-            if idx_name not in arr_per_index: 
-                arr_per_index[idx_name] = []
-            arr_per_index[idx_name].extend(np_arrs) # Sort np arrays according to their index
+        index_info = database.get_index_info(database_path=database_path)
+        if index_info is not None:
+            if index_info not in arr_per_index: 
+                arr_per_index[index_info] = []
+            arr_per_index[index_info].extend(np_arrs) # Sort np arrays according to their index
+
+            idx_name = index_info[1]
 
             # Write entries to SQLite metadata db
             if idx_name not in ids_per_index:
@@ -183,23 +185,21 @@ def add_files_to_indices(file_packages):
                 next_id += 1
 
     # Process this batch of vectors into feature vectors, if index isn't trained, train it and add all feature vectors to index 
-    for idx_name, np_arrs in arr_per_index.items():
-        index_info = database.get_index_info(index_name=idx_name)
-        if index_info is not None:
-            database_path = index_info[3]
-            index = index_instance.get_index(database_path)
-            id_ptr = 0
-            for features in process_np_arrays(np_arrays=np_arrs, feature_extractor=feature_extractor, normalize=normalize, TENSOR_BATCH_SIZE=TENSOR_BATCH_SIZE):
-                n = features.shape[0]
+    for index_info, np_arrs in arr_per_index.items():
+        database_path = index_info[3]
+        index = index_instance.get_index(database_path)
+        id_ptr = 0
+        for features in process_np_arrays(np_arrays=np_arrs, feature_extractor=feature_extractor, normalize=normalize, TENSOR_BATCH_SIZE=TENSOR_BATCH_SIZE):
+            n = features.shape[0]
 
-                # Add to index with lock
-                lock_instance.acquire_write()
-                try:
-                    index.add_with_ids(features, np.array(ids_per_index[idx_name][id_ptr:id_ptr+n], dtype=np.int64))
-                finally:
-                    lock_instance.release_write()
+            # Add to index with lock
+            lock_instance.acquire_write()
+            try:
+                index.add_with_ids(features, np.array(ids_per_index[idx_name][id_ptr:id_ptr+n], dtype=np.int64))
+            finally:
+                lock_instance.release_write()
 
-                id_ptr += n
+            id_ptr += n
 
         idx_path = index_info[2]
 

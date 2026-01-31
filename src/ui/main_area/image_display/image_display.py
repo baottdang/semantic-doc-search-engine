@@ -4,9 +4,7 @@ from ui.main_area.canvas.canvas_painter import CanvasPainter
 from ui.main_area.gallery_controller.gallery_controller_signal import get_gallery_controller_signal_instance
 from ui.main_area.query_image_controller.query_image_controller_signal import get_query_image_controller_signal_instance
 from ui.error.error_signal import get_error_signal_instance
-from resources.strings.string_resource import SUPPORTED_IMAGE_FORMATS
 import os
-import webbrowser
 
 class ImageDisplay(QtWidgets.QFrame):
     def __init__(self, parent):

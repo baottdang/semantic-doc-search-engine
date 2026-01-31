@@ -1,7 +1,7 @@
 from PySide6 import QtWidgets
 from PySide6.QtCore import Slot
 from services.indexer.indexersignal import get_indexer_signal_instance
-import ui.index_setup.index_setup_signal as index_signal
+import ui.index_manager.index_add.index_setup_signal as index_signal
 
 class StatusBar(QtWidgets.QStatusBar):
     def __init__(self, parent=None):

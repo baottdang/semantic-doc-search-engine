@@ -30,21 +30,22 @@ class SettingManager:
                 winreg.HKEY_CURRENT_USER,
                 r"Software\Microsoft\Windows\CurrentVersion\Run",
                 0,
-                winreg.KEY_SET_VALUE
+                winreg.KEY_WRITE
             ) as key:
-                try:
-                    current_value, _ = winreg.QueryValueEx(key, wdname) 
-                    if current_value == wdpath:
-                        return
-                    else:
-                        winreg.SetValueEx(key, wdname, 0, winreg.REG_SZ, wdpath)
-                except FileNotFoundError:
-                    winreg.SetValueEx(key, wdname, 0, winreg.REG_SZ, wdpath)
+                # try:
+                    # current_value, _ = winreg.QueryValueEx(key, wdname) 
+                    # if current_value == wdpath:
+                    #     return
+                    # else:
+                winreg.SetValueEx(key, wdname, 0, winreg.REG_SZ, wdpath)
+                # except FileNotFoundError:
+                #     winreg.SetValueEx(key, wdname, 0, winreg.REG_SZ, wdpath)
         except FileNotFoundError:
             self.error_instance.error_signal.emit("Registry Error", "Registry path not found.")
             error_occured = True
-        except PermissionError:
+        except PermissionError as e:
             self.error_instance.error_signal.emit("Registry Error", "Permission denied. Try running as administrator.")
+            print(e)
             error_occured = True
         except OSError as e:
             self.error_instance.error_signal.emit("Registry Error", f"Unexpected error: {e}")
@@ -66,7 +67,7 @@ class SettingManager:
                 winreg.HKEY_CURRENT_USER,
                 reg_path,
                 0,
-                winreg.KEY_SET_VALUE
+                winreg.KEY_WRITE
             ) as key:
                 winreg.DeleteValue(key, wdname)
         except FileNotFoundError:
