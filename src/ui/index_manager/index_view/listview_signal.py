@@ -3,6 +3,7 @@ from PySide6.QtCore import QObject, Signal
 class ListviewSignal(QObject):
     # Signal
     database_delete_signal = Signal(str, name="database_delete_signal")
+    database_delete_complete_signal = Signal(str, name="database_delete_complete_signal")
 
 # Singleton instance
 signal_instance = None

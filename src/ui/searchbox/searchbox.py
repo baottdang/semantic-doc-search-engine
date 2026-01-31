@@ -153,7 +153,7 @@ class DatabaseSearchBoxWidget(QtWidgets.QWidget):
         self.construct_signal.construct_complete_signal.connect(self.update_database_selection)
 
         self.listview_signal_instance = get_listview_signal_instance()
-        self.listview_signal_instance.database_delete_signal.connect(self.remove_database_from_selection)
+        self.listview_signal_instance.database_delete_complete_signal.connect(lambda database_path : self.update_database_selection())
 
         # Layout setup
         self.layout = QtWidgets.QHBoxLayout()
@@ -163,9 +163,6 @@ class DatabaseSearchBoxWidget(QtWidgets.QWidget):
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.folderbox)
         self.setLayout(self.layout)
-
-    def remove_database_from_selection(self, database_path):
-        self.folderbox.removeItem(self.folderbox.findText(database_path))
 
     def get_selected_database(self):
         return self.folderbox.currentText()

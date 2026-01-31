@@ -74,7 +74,7 @@ class WatchDog:
         self.update_signal_instance.construct_complete_signal.connect(self.update_watch_list)
 
         self.listview_signal_instance = get_listview_signal_instance()
-        self.listview_signal_instance.database_delete_signal.connect(self.remove_from_watch)
+        self.listview_signal_instance.database_delete_complete_signal.connect(self.remove_from_watch)
 
         # Map of handlers and fpaths 
         self.event_handlers = {} 
@@ -104,7 +104,8 @@ class WatchDog:
 
     @Slot()
     def remove_from_watch(self, database_path):
-        self.observer.unschedule(self.event_handlers[database_path])
+        if database_path not in self.db.get_indexed_database_paths():
+            self.observer.unschedule(self.event_handlers[database_path])
 
     def run_tray(self):
         import pystray

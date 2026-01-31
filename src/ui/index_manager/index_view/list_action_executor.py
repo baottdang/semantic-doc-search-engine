@@ -26,4 +26,8 @@ class ListActionExecutor:
         db.delete_indexed_database(indexed_db_path)
 
         # Delete the index
-        self.index_manager.remove_index_list(indexed_db_path)
+        self.index_manager.remove_index_from_list(indexed_db_path)
+
+        # Delete complete, signal changes to UI
+        self.signal_instance.database_delete_complete_signal.emit(indexed_db_path)
+

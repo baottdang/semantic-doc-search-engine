@@ -1,4 +1,4 @@
-import os, configparser
+import os, configparser, sys
 
 app_name = "QLen"
 version = "2.1.0"
@@ -39,8 +39,19 @@ try:
 except FileExistsError:
     pass
 
+# Get anchor location
+if getattr(sys, 'frozen', False):  
+    # Running as a PyInstaller bundle
+    base_path = os.path.dirname(sys.executable)
+else:
+    # Running in normal Python
+    base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) + r"\src" # Quick workaround to getting the main folder's location
+
 # Watchdog
 wdname = "QLenFileWatcherService"
-wdpath = r"D:\DEVELOPMENTS\image_and_pdf_search_engine\devspace\src\services\watchdog\watchdog.exe" # placeholder
+wdpath_relative = r"watchdogservice.exe" 
+wdpath = os.path.join(base_path, wdpath_relative)
 
-icon_path = r"D:\DEVELOPMENTS\image_and_pdf_search_engine\devspace\resources\drawables\ql_icon.ico" #placeholder
+# icon_path = r"drawables\ql_icon.ico" 
+icon_path = os.path.join(base_path, r"drawables\ql_icon.ico")
+
