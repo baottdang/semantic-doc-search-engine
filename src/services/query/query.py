@@ -91,8 +91,10 @@ def get_similar_vectors(query, index, database, NPROBE=10, NUM_THREAD=2, NUM_RES
 
         # Query with lock
         lock_instance.acquire_read()
-        D, I = index.search(query, k=NUM_RESULTS)
-        lock_instance.release_read()
+        try:
+            D, I = index.search(query, k=NUM_RESULTS)
+        finally:
+            lock_instance.release_read()
 
         for i, dist in zip(I[0], D[0]):
             data = database.get_index_entry(int(i))

@@ -142,77 +142,90 @@ def add_files_to_indices(file_packages):
     from services.index.feature_extractor.visionmodel import get_watchdog_vision_model_instance
     from services.index.index import get_index_instance
     from services.index.feature_extractor.feature_extractor import process_np_arrays
-    from services.threadlock.threadlock import get_index_rw_lock_instance
+    from services.threadlock.threadlock import get_index_rw_lock_instance, get_database_rw_lock_instance
     from ui.error.error_signal import get_error_signal_instance
     import services.index.index_construct_utils as utils
     import numpy as np
 
-    TENSOR_BATCH_SIZE = 128
-
-    database = db.Database(database_path)
-
     # Get lock
-    lock_instance = get_index_rw_lock_instance()
+    database_lock_instance = get_database_rw_lock_instance() # General lock for editing database AND index
+    index_lock_instance = get_index_rw_lock_instance() # Lock for writing to FAISS index
 
-    # Get vision model instance
-    model_inst = get_watchdog_vision_model_instance()
-    feature_extractor = model_inst.get_feature_extractor()
-    normalize = model_inst.get_normalize()
-
-    # Get next available index ID 
-    next_id = database.get_next_index_id()
-    index_instance = get_index_instance()
-
-    arr_per_index = {}
-    ids_per_index = {}
-    for file, database_path in file_packages:
-        np_arrs, path = utils.get_image_np_arr_scaled(file)
-        index_info = database.get_index_info(database_path=database_path)
-        if index_info is not None:
-            if index_info not in arr_per_index: 
-                arr_per_index[index_info] = []
-            arr_per_index[index_info].extend(np_arrs) # Sort np arrays according to their index
-
-            idx_name = index_info[1]
-
-            # Write entries to SQLite metadata db
-            if idx_name not in ids_per_index:
-                ids_per_index[idx_name] = []
-
-            for page in range(1,len(np_arrs)+1):
-                ids_per_index[idx_name].append(next_id)
-                database.add_index_entry(next_id, idx_name, path, page, commit=False)
-                next_id += 1
-
-    # Process this batch of vectors into feature vectors, if index isn't trained, train it and add all feature vectors to index 
-    for index_info, np_arrs in arr_per_index.items():
-        database_path = index_info[3]
-        index = index_instance.get_index(database_path)
-        id_ptr = 0
-        for features in process_np_arrays(np_arrays=np_arrs, feature_extractor=feature_extractor, normalize=normalize, TENSOR_BATCH_SIZE=TENSOR_BATCH_SIZE):
-            n = features.shape[0]
-
-            # Add to index with lock
-            lock_instance.acquire_write()
-            try:
-                index.add_with_ids(features, np.array(ids_per_index[idx_name][id_ptr:id_ptr+n], dtype=np.int64))
-            finally:
-                lock_instance.release_write()
-
-            id_ptr += n
-
-        idx_path = index_info[2]
-
-        # Write index with lock
-        lock_instance.acquire_write()
-        try:
-            utils.write_index(index, idx_path)
-        finally:
-            lock_instance.release_write()
+    # Lock editing to database
+    database_lock_instance.acquire_read()
 
     try:
-        database.commit()
-    except Exception as e:
-        error_instance = get_error_signal_instance()
-        error_instance.error_signal.emit("Database Error", "Couldn't write database.")
-    database.close_connection()
+        TENSOR_BATCH_SIZE = 128
+
+        database = db.Database(database_path)
+
+        # Get vision model instance
+        model_inst = get_watchdog_vision_model_instance()
+        feature_extractor = model_inst.get_feature_extractor()
+        normalize = model_inst.get_normalize()
+
+        # Get next available index ID 
+        next_id = database.get_next_index_id()
+        index_instance = get_index_instance()
+
+        arr_per_index = {}
+        ids_per_index = {}
+        for file, database_path in file_packages:
+            np_arrs, path = utils.get_image_np_arr_scaled(file)
+            index_info = database.get_index_info(database_path=database_path)
+
+            if index_info is not None:
+                if index_info not in arr_per_index: 
+                    arr_per_index[index_info] = []
+                arr_per_index[index_info].extend(np_arrs) # Sort np arrays according to their index
+
+                idx_name = index_info[1]
+
+                # Write entries to SQLite metadata db
+                if idx_name not in ids_per_index:
+                    ids_per_index[idx_name] = []
+
+                for page in range(1,len(np_arrs)+1):
+                    ids_per_index[idx_name].append(next_id)
+                    database.add_index_entry(next_id, idx_name, path, page, commit=False)
+                    next_id += 1
+
+        # Process this batch of vectors into feature vectors, if index isn't trained, train it and add all feature vectors to index 
+        for index_info, np_arrs in arr_per_index.items():
+            database_path = index_info[3]
+            index = index_instance.get_index(database_path)
+            if index is not None:
+                id_ptr = 0
+                for features in process_np_arrays(np_arrays=np_arrs, feature_extractor=feature_extractor, normalize=normalize, TENSOR_BATCH_SIZE=TENSOR_BATCH_SIZE):
+                    n = features.shape[0]
+
+                    # Add to index with lock
+                    index_lock_instance.acquire_write()
+                    try:
+                        index.add_with_ids(features, np.array(ids_per_index[idx_name][id_ptr:id_ptr+n], dtype=np.int64))
+                    finally:
+                        index_lock_instance.release_write()
+
+                    id_ptr += n
+
+                idx_path = index_info[2]
+
+                # Write index with lock
+                index_lock_instance.acquire_write()
+                try:
+                    utils.write_index(index, idx_path)
+                finally:
+                    index_lock_instance.release_write()
+
+        # Commit to database
+        try:
+            database.commit()
+        except Exception as e:
+            error_instance = get_error_signal_instance()
+            error_instance.error_signal.emit("Database Error", "Couldn't write database.")
+
+        database.close_connection()
+
+    finally:
+        # Release the editing lock
+        database_lock_instance.release_read()

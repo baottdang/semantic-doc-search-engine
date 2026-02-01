@@ -26,10 +26,18 @@ class RWLock:
         self._resource_lock.release()
 
 # Singleton instance
-rwlock = None
+index_rwlock = None
+database_rwlock = None
 
 def get_index_rw_lock_instance():
-    global rwlock
-    if rwlock is None:
-        rwlock = RWLock()
-    return rwlock
+    global index_rwlock
+    if index_rwlock is None:
+        index_rwlock = RWLock()
+    return index_rwlock
+
+def get_database_rw_lock_instance():
+    global database_rwlock
+    if database_rwlock is None:
+        database_rwlock = RWLock()
+    return database_rwlock
+

@@ -23,8 +23,6 @@ class IndexView(QtWidgets.QWidget):
 
         self.load_indices()
 
-        self.view.clicked[QModelIndex].connect(self.entry_on_clicked)
-
         # Signal
         self.index_construct_signal_instance = get_construct_signal_instance()
         self.index_construct_signal_instance.construct_complete_signal.connect(self.append_index)

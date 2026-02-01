@@ -1,5 +1,7 @@
 from services.database.database import get_main_database_instance
 from ui.error.error_signal import get_error_signal_instance
+from resources.strings.string_resource import database_path
+from services.database.database import Database
 import os
 
 class Index():
@@ -30,14 +32,30 @@ class Index():
         
         :param path: path of index
         """
-        return self.indices[database_path]
+        try:
+            return self.indices[database_path]
+        except KeyError as e:
+            return None
     
     def add_new_index_to_mem(self, index, database_path):
         self.indices[database_path] = index
 
-    def remove_index_from_list(self, database_path):
-        # Note that index is still in mem to avoid complications with query
-        self.indices.pop(database_path, None)
+    def remove_index(self, indexed_database_path):
+        """
+        Remove the index from the list and the disk
+        Index still lives in memory to avoid query issues
+        
+        :param database_path: Path to database
+        """
+        db = Database(database_path)
+        self.indices.pop(indexed_database_path, None)
+
+        index_info = db.get_index_info(database_path=indexed_database_path)
+        index_path = index_info[2]
+
+        if os.path.exists(index_path): 
+            os.remove(index_path)
+            
     
 # Singleton instance
 index = None
