@@ -41,7 +41,7 @@
 - Graphical User Interface: PySide6.
 
 ## Download
-- [v1.0.0-prealpha (Google Drive) (Windows)](https://drive.google.com/file/d/1RKDgtx0ncl9Bk7XsebaeDr8CTpERn02d/view?usp=sharing)
+- [v1.0.1-prealpha (Google Drive) (Windows)](https://drive.google.com/file/d/1zBmvZcgVMCtNcns2UM0kv7xMyxCOa8M-/view?usp=sharing)
 
 ## Support 
 - If you like this project, consider supporting me on Ko-fi
