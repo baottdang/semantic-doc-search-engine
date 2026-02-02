@@ -1,7 +1,9 @@
 from PySide6 import QtWidgets
-from resources.strings.string_resource import config_path
+from resources.strings.string_resource import config_path, icon_path
 from ui.setting.setting_signal import get_setting_signal_instance
 from ui.setting.setting_manager import SettingManager
+from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt
 import configparser
 
 class SettingWindow(QtWidgets.QWidget):
@@ -11,6 +13,8 @@ class SettingWindow(QtWidgets.QWidget):
         self.setWindowTitle("Settings")
         self.setFixedWidth(400)
         self.setFixedHeight(150)
+        self.setWindowIcon(QIcon(icon_path))
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 
         self.setting_signal_instance = get_setting_signal_instance()
         self.manager = SettingManager()

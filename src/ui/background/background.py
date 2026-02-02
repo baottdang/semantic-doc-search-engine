@@ -8,14 +8,14 @@ from ui.status_bar.status_bar import StatusBar
 from ui.error.error_signal import get_error_signal_instance
 from ui.main_area.main_area import MainArea
 from ui.searchbox.searchbox_signal import get_searchbox_signal_instance
-import resources.strings.string_resource
+from resources.strings.string_resource import icon_path, app_name
 
 class BackgroundWidget(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle(resources.strings.string_resource.app_name)
+        self.setWindowTitle(app_name)
         self.setMinimumSize(800, 600)
-        self.setWindowIcon(QIcon(resources.strings.string_resource.icon_path))
+        self.setWindowIcon(QIcon(icon_path))
 
         # Add menu bar
         self.menu_bar = MenuBarWidget(self)
@@ -66,3 +66,8 @@ class BackgroundWidget(QtWidgets.QMainWindow):
     
     def display_error(self, error_name, error_msg):
         critical = QtWidgets.QMessageBox().critical(self, error_name, error_msg)
+
+    def closeEvent(self, event):
+        for window in QtWidgets.QApplication.topLevelWidgets():
+            if window != self:
+                window.close()

@@ -1,9 +1,11 @@
 from pathlib import Path
 from PySide6.QtCore import Slot
 from PySide6 import QtWidgets
+from PySide6.QtGui import QIcon
 from ui.index_manager.index_add.index_setup_utils import is_child_of_indexed, is_indexed, done_setup
 from src.services.index.index_construct import construct_index
 from services.threads import taskqueue as tq
+from resources.strings.string_resource import icon_path
 import ui.index_manager.index_add.index_setup_signal as signal
 import services.index.index_construct_signal as construct_signal
 
@@ -13,7 +15,8 @@ class IndexSetupWidget(QtWidgets.QWidget):
 
         self.setWindowTitle("Add new database")
         self.setFixedWidth(400)
-        self.setFixedHeight(150)
+        self.setFixedHeight(150)        
+        self.setWindowIcon(QIcon(icon_path))
 
         # Components
         self.from_label = QtWidgets.QLabel("Database: ")
