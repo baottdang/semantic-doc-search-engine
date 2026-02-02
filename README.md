@@ -1,5 +1,4 @@
 # QLen – Local Cross-Format Visual Search Engine for PDFs & Images
-
 - This project provides a local search tool designed for engineers who work with piles of digital drawings, diagrams, and technical PDFs. Instead of extracting text, QLen learns the visual features of your files and retrieves results based on content similarity.
 
 - To achieve that, the project utilizes advanced Machine Learning and CNN feature extraction models to learn and index the contents of the database, allowing searches to be based on **contextual similarity**, or **features** of the query file, returning either exact matches if found, or files of similar contents.
@@ -10,10 +9,10 @@
 
 ## Preview
 <img width="1919" height="1030" alt="searching" src="https://github.com/user-attachments/assets/2dfa248d-3fc6-4e25-9c6f-ff0f92f46c9b" />
-- At query
+
 
 <img width="1919" height="1032" alt="index_add" src="https://github.com/user-attachments/assets/f27a66d3-7b0c-4e71-809a-656372790a2e" />
-- At adding new database
+
 
 ## Key Features
 
@@ -41,6 +40,11 @@
 
 ## Download
 - [v1.0.0-prealpha (Google Drive) (Windows)](https://drive.google.com/file/d/1RKDgtx0ncl9Bk7XsebaeDr8CTpERn02d/view?usp=sharing)
+
+## Support 
+- If you like this project, consider supporting me on Ko-fi
+  
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/V7V41TGDA5)
 
 ## When Cloning
 - To start the app, simply clone it to your system, (preferably) inside a virtual environment.
