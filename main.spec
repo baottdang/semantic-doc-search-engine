@@ -32,7 +32,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['resources\\drawables\\ql_icon.ico'],
+    icon=['src\\drawables\\ql_icon.ico'],
 )
 coll = COLLECT(
     exe,

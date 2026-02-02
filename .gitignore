@@ -7,5 +7,5 @@ __pycache__/
 pdfium-v8-win-x64/
 build/
 dist/
-
+app/
 
