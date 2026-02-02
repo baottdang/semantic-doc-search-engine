@@ -36,6 +36,8 @@
 
 - Database: SQLite.
 
+- PDF processing: PDFium.
+
 - Graphical User Interface: PySide6.
 
 ## Download
