@@ -14,7 +14,6 @@ class SettingWindow(QtWidgets.QWidget):
         self.setFixedWidth(400)
         self.setFixedHeight(150)
         self.setWindowIcon(QIcon(icon_path))
-        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 
         self.setting_signal_instance = get_setting_signal_instance()
         self.manager = SettingManager()

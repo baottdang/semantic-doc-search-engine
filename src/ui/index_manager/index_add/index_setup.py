@@ -1,5 +1,5 @@
 from pathlib import Path
-from PySide6.QtCore import Slot
+from PySide6.QtCore import Slot, Qt
 from PySide6 import QtWidgets
 from PySide6.QtGui import QIcon
 from ui.index_manager.index_add.index_setup_utils import is_child_of_indexed, is_indexed, done_setup
