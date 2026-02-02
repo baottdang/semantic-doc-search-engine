@@ -1,10 +1,12 @@
-# QLen – Local AI Semantic Search Engine for PDFs & Images
+# QLen – Local Cross-Format Visual Search Engine for PDFs & Images
 
-- This project provides a lightweight AI-integrated fully local search engine with an intuitive graphical UI that allows users to search across **both** PDFs and image files simultaneously, edit metadata, and manage large-scale file databases efficiently.
+- This project provides a local search tool designed for engineers who work with piles of digital drawings, diagrams, and technical PDFs. Instead of extracting text, QLen learns the visual features of your files and retrieves results based on content similarity.
 
 - To achieve that, the project utilizes advanced Machine Learning and CNN feature extraction models to learn and index the contents of the database, allowing searches to be based on **contextual similarity**, or **features** of the query file, returning either exact matches if found, or files of similar contents.
+  
+- What makes QLen unique is its unified treatment of images and PDFs: a schematic saved as a PDF can be used to find related diagrams stored as images, and vice versa. Whether you query with a screenshot, a scanned drawing, or a technical PDF, QLen returns visually similar content across formats — all processed locally, with no cloud dependencies.
 
-- This project was built with user experience in mind, from human interactions to performance, the structure was tuned to run on most consumer systems, laptops included.
+- Built with GPU‑accelerated feature extraction and a lightweight GUI, QLen helps engineers quickly locate the right drawing in large archives, ensuring privacy and speed in everyday workflows.
 
 ## Preview
 <img width="1919" height="1030" alt="searching" src="https://github.com/user-attachments/assets/2dfa248d-3fc6-4e25-9c6f-ff0f92f46c9b" />
@@ -15,17 +17,17 @@
 
 ## Key Features
 
-- AI-leveraged search engine: Allowing for semantic based queries, where the user can initiate searches using real contents such as images or PDF files, and the returned results will be either exact matches of the query if found, or similar in contents.
+- CNN‑powered visual  search engine: Enables queries where the user can initiate searches using contents such as images or PDF files, and the returned results will be either exact matches of the query if found, or similar in contents.
 
-- Fully local: No API calls, no outside connections needed as calculations and feature extractions are performed solely on the user's machine, emphasizing **privacy-first** architechture.
+- Fully local: No API calls, no outside connections needed as calculations and feature extractions are performed solely on the user's machine, emphasizing **privacy**.
 
-- Fully cross-type: In this engine, PDF files and images are treated uniformly from the user experience, where the content of an image can be used to search for the content a PDF file and vice versa, opening up many ways a user can tailor the tool to their need.
+- Fully cross-type: In this engine, PDF files and images are treated uniformly from the user experience, where the content of an image can be used to search for the content a PDF file and vice versa.
 
 - Fast one time setup: The setup pipeline has been heavily optimized for maximum speed and performance while maintaining the lightweight status through multithreading and advance batching techniques with GPU-accelerated algorithms to provide a quick and smooth process.
 
 - Screen capture: Apart from querying with the usual path to file approach, the user can also quickly look up anything on the screen using the built-in screenshot feature.
 
-- Live file tracking: The application can automatically mark new file additions, edits or removals to update the database, strongly embracing the **"Index once, run forever"** philosophy.
+- Live file tracking: The application can automatically mark new file additions, edits or removals to update the database, embracing the **"Index once, run forever"** philosophy.
 
 ## Tech stack:
 
@@ -38,10 +40,9 @@
 - Graphical User Interface: PySide6.
 
 ## Download
-- [v0.9.0-prealpha (Google Drive)](https://drive.google.com/file/d/1a8AzgRNdeY9cf0ov_GcsM2LZDfiq9R_C/view?usp=sharing)
+- [v1.0.0-prealpha (Google Drive) (Windows)](https://drive.google.com/file/d/1RKDgtx0ncl9Bk7XsebaeDr8CTpERn02d/view?usp=sharing)
 
-## Setup
-
+## When Cloning
 - To start the app, simply clone it to your system, (preferably) inside a virtual environment.
 
 - Install the dependancies with ``pip install -r requirements.txt``
@@ -50,7 +51,7 @@
 
 ## Usage
 ### Index
-- First, index the database you want later searches to be in by clicking **Index** on the top **Toolbar** and click **Add Database**.
+- First, index the database you want later searches to be in by clicking **Database** on the top **Toolbar**, navigate to **Manage Databases** and click **New Database**.
 
 - Choose the path to your database and click add, the process will run automatically in the background, to ensure maximum performance, close other apps before this process . **Note that** only databases **big enough** can be indexed, and that includes ones with **at least 400 files of images or pdf pages**.
 ### Query
@@ -59,3 +60,7 @@
 - Then choose the database the search will be performed in.
 
 - Now, clicking **Search** will look up that query in the desired database. **Right clicking** the results also show options to navigate to the file's location or open it provided that there's a default app to execute that request.
+### File update
+- To enable live file updates, go to **Settings** and enable **Boot File Watcher Service alongside Windows**, save and **Restart** your system.
+
+- New additions will be indexed automatically, file renames or location changes are reflected and deletion of a file within a database will remove it from the engine.
