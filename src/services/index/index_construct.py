@@ -30,14 +30,23 @@ def construct_index(folder_path):
 
     # Create a new index
     nlist = 10  # Number of clusters
-    index = utils.create_index(nlist)
+    index = utils.create_index(nlist, DIMENSION=576)
 
     # Bucket to hold entries for batching through yielding
     bucket = []
     vector_count = 0
 
+    # Train batch
+    train_count = 0
+    train_batch = []
+
+    # IDs of vectors
+    id_ptr = 0
+    ids = []
+
     index_is_trained = False
-    BATCH_SIZE = 1000
+    FILE_BATCH_SIZE = 1000
+    VECTOR_BATCH_SIZE = 1000
     TRAIN_THRESHOLD = nlist * 40  # Number of samples to use for training the index (FAISS' recommendation is >= nlist * 30)
     TENSOR_BATCH_SIZE = utils.get_tensor_batch_size() # Size of tensor batches for feature extraction, MUST NOT BE TOO LARGE SINCE EACH TENSOR TAKES LOTS OF MEM
 
@@ -56,57 +65,63 @@ def construct_index(folder_path):
     signal = get_construct_signal_instance()
 
     # Loop through each batch of file in the folder tree
-    with ProcessPoolExecutor(max_workers=os.cpu_count() // 2) as executor:
-        for paths in utils.search_folder_tree(f_address=folder_path, root_level=True, bucket=bucket, BATCH_SIZE=BATCH_SIZE):
+    for file_paths in utils.search_folder_tree(f_address=folder_path, root_level=True, bucket=bucket, BATCH_SIZE=FILE_BATCH_SIZE):
+        # Multiprocessing file vectorization process
+        with ProcessPoolExecutor(max_workers=os.cpu_count() // 2) as executor:
+            for np_arr_packages in utils.batch_multiprocess_get_np_scaled(executor, file_paths, VECTOR_BATCH_SIZE=VECTOR_BATCH_SIZE):
+                # If no valid np arrays were returned, skip this batch
+                if not np_arr_packages:
+                    continue
 
-            # Multiprocessing file vectorization process
-            np_arr_packages = list(filter(None, executor.map(utils.get_image_np_arr_scaled, paths)))
+                # Unpack the return package into vectors and paths
+                file_arr_lists, paths = zip(*np_arr_packages) # Each np_arr_list in np_arr_lists is the list of pages of the file, with each page containing their extracted components
+                np_arrays = [val for file_list in file_arr_lists for page_list in file_list for val in page_list]
 
-            # If no valid np arrays were returned, skip this batch
-            if not np_arr_packages:
-                continue
+                # Write entries to SQLite metadata db
+                for file_arr_list, path in zip(file_arr_lists, paths): # Each file_arr_list: [[extracted components page 1 and page 1], [extracted components page 2 and page 2], ...]
+                    for page_number, page_list in enumerate(file_arr_list):
+                        for page_component in page_list:
+                            ids.append(next_id)
+                            database.add_index_entry(next_id, index_name, path, page_number+1, commit=False)
+                            next_id += 1
+                            vector_count += 1
 
-            # Unpack the return package into vectors and paths
-            np_arr_tuple, paths = zip(*np_arr_packages)
-            np_arrays =  list(chain.from_iterable(np_arr_tuple))
+                # Train and add all features to index
+                import numpy as np
+                import torch
 
-            # Write entries to SQLite metadata db
-            ids = []
-            for arr_tuples_list, path in zip(np_arr_tuple, paths):
-                for page in range(1,len(arr_tuples_list)+1):
-                    ids.append(next_id)
-                    database.add_index_entry(next_id, index_name, path, page, commit=False)
-                    next_id += 1
-                    vector_count += 1
+                # Decide extraction device 
+                device = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
+                feature_extractor = feature_extractor.to(device)
 
-            # Train and add all features to index
-            import numpy as np
+                # Process this batch of vectors into feature vectors, if index isn't trained, train it and add all feature vectors to index 
+                for features in process_np_arrays(np_arrays=np_arrays, feature_extractor=feature_extractor, device=device, normalize=normalize, TENSOR_BATCH_SIZE=TENSOR_BATCH_SIZE):
+                    if not index_is_trained:
+                        train_batch.append(features)
+                        train_count += features.shape[0]
+                        # If feature vectors exceed the training threshold, train the index
+                        if train_count >= TRAIN_THRESHOLD:
+                            # Concatenate first n samples
+                            full_buf = np.vstack(train_batch)
 
-            train_batch = []
-            id_ptr = 0
-            # Process this batch of vectors into feature vectors, if index isn't trained, train it and add all feature vectors to index 
-            for features in process_np_arrays(np_arrays=np_arrays, feature_extractor=feature_extractor, normalize=normalize, TENSOR_BATCH_SIZE=TENSOR_BATCH_SIZE):
-                if not index_is_trained:
-                    train_batch.append(features)
-                    # If feature vectors exceed the training threshold, train the index
-                    if sum(f.shape[0] for f in train_batch) >= TRAIN_THRESHOLD:
-                        # Concatenate first n samples
-                        train_data = np.vstack(train_batch)[:TRAIN_THRESHOLD]
-                        index.train(train_data)
-                        index_is_trained = True
+                            # perm = np.random.permutation(full_buf.shape[0]) # Random shuffle
+                            # full_buf = full_buf[perm]
+                            train_data = full_buf[:TRAIN_THRESHOLD]
 
-                        full_buf = np.vstack(train_batch)
-                        n = full_buf.shape[0]
-                        index.add_with_ids(full_buf, np.array(ids[id_ptr:id_ptr+n], dtype=np.int64))
+                            index.train(train_data)
+                            index_is_trained = True
+
+                            n = full_buf.shape[0]
+                            index.add_with_ids(full_buf, np.array(ids[id_ptr:id_ptr+n], dtype=np.int64))
+                            id_ptr += n
+                            train_batch.clear()
+                    else:
+                        n = features.shape[0]
+                        index.add_with_ids(features, np.array(ids[id_ptr:id_ptr+n], dtype=np.int64))
                         id_ptr += n
-                        train_batch.clear()
-                else:
-                    n = features.shape[0]
-                    index.add_with_ids(features, np.array(ids[id_ptr:id_ptr+n], dtype=np.int64))
-                    id_ptr += n
 
     # Check database size, database must contain at least 400 files, discard if too small
-    if vector_count <= 400:
+    if vector_count <= TRAIN_THRESHOLD:
         error_instance = get_error_signal_instance()
         error_instance.error_signal.emit("Database Error", "Not enough files in database for index\nDatabase must have at least 400 files (PDF pages or Images)")
         signal.construct_error_signal.emit(folder_path)
@@ -146,6 +161,7 @@ def add_files_to_indices(file_packages):
     from ui.error.error_signal import get_error_signal_instance
     import services.index.index_construct_utils as utils
     import numpy as np
+    import torch
 
     # Get lock
     database_lock_instance = get_database_rw_lock_instance() # General lock for editing database AND index
@@ -163,6 +179,7 @@ def add_files_to_indices(file_packages):
         model_inst = get_watchdog_vision_model_instance()
         feature_extractor = model_inst.get_feature_extractor()
         normalize = model_inst.get_normalize()
+        device = torch.device("cpu") 
 
         # Get next available index ID 
         next_id = database.get_next_index_id()
@@ -171,13 +188,14 @@ def add_files_to_indices(file_packages):
         arr_per_index = {}
         ids_per_index = {}
         for file, database_path in file_packages:
-            np_arrs, path = utils.get_image_np_arr_scaled(file)
+            file_arr_list, path = utils.get_image_np_arr_scaled(file)
+            file_np_arr = [np_arr for page in file_arr_list for np_arr in page]
             index_info = database.get_index_info(database_path=database_path)
 
             if index_info is not None:
                 if index_info not in arr_per_index: 
                     arr_per_index[index_info] = []
-                arr_per_index[index_info].extend(np_arrs) # Sort np arrays according to their index
+                arr_per_index[index_info].extend(file_np_arr) # Sort np arrays according to their index
 
                 idx_name = index_info[1]
 
@@ -185,10 +203,11 @@ def add_files_to_indices(file_packages):
                 if idx_name not in ids_per_index:
                     ids_per_index[idx_name] = []
 
-                for page in range(1,len(np_arrs)+1):
-                    ids_per_index[idx_name].append(next_id)
-                    database.add_index_entry(next_id, idx_name, path, page, commit=False)
-                    next_id += 1
+                for page in range(1,len(file_arr_list)+1):
+                    for page_component in file_arr_list[page - 1]:
+                        ids_per_index[idx_name].append(next_id)
+                        database.add_index_entry(next_id, idx_name, path, page, commit=False)
+                        next_id += 1
 
         # Process this batch of vectors into feature vectors, if index isn't trained, train it and add all feature vectors to index 
         for index_info, np_arrs in arr_per_index.items():
@@ -196,7 +215,7 @@ def add_files_to_indices(file_packages):
             index = index_instance.get_index(database_path)
             if index is not None:
                 id_ptr = 0
-                for features in process_np_arrays(np_arrays=np_arrs, feature_extractor=feature_extractor, normalize=normalize, TENSOR_BATCH_SIZE=TENSOR_BATCH_SIZE):
+                for features in process_np_arrays(np_arrays=np_arrs, feature_extractor=feature_extractor, device=device, normalize=normalize, TENSOR_BATCH_SIZE=TENSOR_BATCH_SIZE):
                     n = features.shape[0]
 
                     # Add to index with lock

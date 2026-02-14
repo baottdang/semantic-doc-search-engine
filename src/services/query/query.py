@@ -3,11 +3,9 @@ from services.index.feature_extractor.feature_extractor import process_np_array
 from services.index.feature_extractor.visionmodel import get_query_vision_model_instance
 from PySide6.QtGui import QImage
 import numpy as np
-import os
+import os, cv2
 
 def QImageToCvMat(incomingImage):
-    import cv2
-    
     incomingImage = incomingImage.convertToFormat(QImage.Format_RGB888)
 
     width = incomingImage.width()
@@ -23,8 +21,40 @@ def QImageToCvMat(incomingImage):
     # Reshape into (height, width, 3)
     arr = arr.reshape((height, width, 3))
 
-    arr_resized = cv2.resize(arr, (224, 224), interpolation=cv2.INTER_LINEAR)
-    return arr_resized
+    # Make contiguous and convert to BGR for OpenCV
+    arr = np.ascontiguousarray(arr)
+    arr = cv2.cvtColor(arr, cv2.COLOR_RGB2BGR)
+
+    return arr
+
+def get_focus(img_arr, focus_thres=0.2):
+    """
+    Obtain the main focus of the image
+    
+    :param img_arr: Numpy array of the full image
+    """
+    from services.object_detection.object_detector import extract_components
+
+    # Extract the components from the image
+    components = extract_components(img_arr, kernel_size=3, is_bgr=True)
+
+    # Calculate the full area of the image
+    full_area = img_arr.shape[0] * img_arr.shape[1] # Full area of the image
+
+    # Find the component with the largest area
+    main_component_nominee = None
+    largest_area = 0
+    for component in components:
+        component_area = component.shape[0] * component.shape[1]
+        if component_area > largest_area:
+            largest_area = component_area
+            main_component_nominee = component
+
+    # Focus on component if its size exceeds the threshold, if not focus on the whole image
+    if largest_area / full_area >= focus_thres:
+        return main_component_nominee
+    
+    return img_arr
 
 def query_path(file_path, index, database, NPROBE=10, NUM_THREAD=2, NUM_RESULTS=10):
     """
@@ -38,7 +68,7 @@ def query_path(file_path, index, database, NPROBE=10, NUM_THREAD=2, NUM_RESULTS=
     """
     if not os.path.exists(file_path):
         return []
-    vector_arr = get_image_np_arr_scaled(file_path)[0][0] # First page of document
+    vector_arr = get_image_np_arr_scaled(file_path)[0][0][-1] # First page of document
 
     # Obtain the feature extractor model
     model = get_query_vision_model_instance()
@@ -48,7 +78,7 @@ def query_path(file_path, index, database, NPROBE=10, NUM_THREAD=2, NUM_RESULTS=
 
     return get_similar_vectors(feature_vector, index, database, NPROBE, NUM_THREAD, NUM_RESULTS)
 
-def query_image(qimage, index, database, NPROBE=10, NUM_THREAD=2, NUM_RESULTS=10):
+def query_image(qimage, index, database, NPROBE=150, NUM_THREAD=2, NUM_RESULTS=10):
     """
     Query the image in the specified index using its numpy array
     
@@ -58,13 +88,18 @@ def query_image(qimage, index, database, NPROBE=10, NUM_THREAD=2, NUM_RESULTS=10
     :param NUM_THREAD: Number of threads to perform the query
     :param NUM_RESULTS: Number of returned results
     """
+    # Obtain the focus of the image
+    arr = QImageToCvMat(qimage)
+    main_component = get_focus(arr) # Obtain the main focus of the image
+    cv2.imwrite("output.png", main_component)
+    arr_resized = cv2.resize(main_component, (224, 224), interpolation=cv2.INTER_LINEAR)
+
     # Obtain the feature extractor model
-    img_array = QImageToCvMat(qimage)
     model = get_query_vision_model_instance()
     feature_extractor = model.get_feature_extractor()
     normalize = model.get_normalize()
 
-    feature_vector = process_np_array(img_array, feature_extractor, normalize).reshape(1, -1)
+    feature_vector = process_np_array(arr_resized, feature_extractor, normalize).reshape(1, -1)
 
     return get_similar_vectors(feature_vector, index, database, NPROBE, NUM_THREAD, NUM_RESULTS)
 
@@ -83,6 +118,7 @@ def get_similar_vectors(query, index, database, NPROBE=10, NUM_THREAD=2, NUM_RES
     import faiss
     
     results = []
+    path_set = set()
     lock_instance = get_index_rw_lock_instance()
 
     if index:
@@ -101,7 +137,9 @@ def get_similar_vectors(query, index, database, NPROBE=10, NUM_THREAD=2, NUM_RES
             if data is None:
                 continue
             _, _, path, page = data
-            results.append((path, page, dist))
+            if path not in path_set:
+                results.append((path, page, dist))
+                path_set.add(path)
     
     return results
 

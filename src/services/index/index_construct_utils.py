@@ -58,7 +58,6 @@ def imread_unicode(path):
         data = np.frombuffer(f.read(), np.uint8)
     return cv2.imdecode(data, cv2.IMREAD_COLOR)
 
-
 def get_image_np_arr_scaled(file, dpi=96):
     """
     Get the vector representation of a file.
@@ -74,6 +73,7 @@ def get_image_np_arr_scaled(file, dpi=96):
     import cv2
     from services.index.pdfium import pdfium_wrapper
     from resources.strings.string_resource import SUPPORTED_IMAGE_FORMATS
+    from services.object_detection.object_detector import extract_components
 
     arrays = []
     if file == "":
@@ -83,16 +83,38 @@ def get_image_np_arr_scaled(file, dpi=96):
             bgr_arr = imread_unicode(file)
             if bgr_arr is None:
                 return None
-            bgr_arr_re = cv2.resize(bgr_arr, (224, 224), interpolation=cv2.INTER_LINEAR)
-            np_array = cv2.cvtColor(bgr_arr_re, cv2.COLOR_BGR2RGB)
-            if np_array is not None:
-                arrays.append(np_array)
+
+            # Preprocess each component of an image
+            processed_components = []
+            for component_arr in extract_components(bgr_arr, is_bgr=True):
+                bgr_arr_re = cv2.resize(component_arr, (224, 224), interpolation=cv2.INTER_LINEAR)
+                np_array = cv2.cvtColor(bgr_arr_re, cv2.COLOR_BGR2RGB)
+                if np_array is not None:
+                    processed_components.append(np_array)
+
+            # Include the whole page too
+            page_bgr_arr_re = cv2.resize(bgr_arr, (224, 224), interpolation=cv2.INTER_LINEAR)
+            page_np_array = cv2.cvtColor(page_bgr_arr_re, cv2.COLOR_BGR2RGB)
+            if page_np_array is not None:
+                processed_components.append(page_np_array)
+
+            arrays.append(processed_components)
+
         elif file.lower().endswith(".pdf"): # If pdf file
             for arr_rgb in pdfium_wrapper.render_doc(file, 0, 0, dpi):
+                processed_components = []
                 if arr_rgb is not None:
-                    # Drop alpha, convert BGRA → RGB
-                    np_array = cv2.resize(arr_rgb, (224, 224), interpolation=cv2.INTER_LINEAR)
-                    arrays.append(np_array)          
+                    # Extract components from each page and process
+                    for component_arr in extract_components(arr_rgb, is_bgr=False):
+                        np_array = cv2.resize(component_arr, (224, 224), interpolation=cv2.INTER_LINEAR)
+                        processed_components.append(np_array)     
+
+                # Include the whole page too
+                page_np_array = cv2.resize(arr_rgb, (224, 224), interpolation=cv2.INTER_LINEAR)
+                processed_components.append(page_np_array)
+
+                arrays.append(processed_components)
+
     except Exception as e:
         print(f"Error with {file}: {e}")
         return None
@@ -150,3 +172,32 @@ def write_index(index, idx_path):
     except Exception as e:
         error_instance = get_error_signal_instance()
         error_instance.error_signal.emit("Index Error", "Couldn't write index.")
+
+def batch_multiprocess_get_np_scaled(executor, paths, VECTOR_BATCH_SIZE=1000):
+    """
+    Batching function to limit the number of extracted np_arrays that exist at once
+    
+    :param paths: Paths to the files
+    :param VECTOR_BATCH_SIZE: Size of the batch
+    """
+    results = []
+    vector_count = 0
+
+    for result in executor.map(get_image_np_arr_scaled, paths):
+        if result is None:
+            continue
+
+        file_arr_list, path = result
+
+        file_vector_count = sum(len(page) for page in file_arr_list)
+
+        results.append(result)
+        vector_count += file_vector_count
+
+        if vector_count >= VECTOR_BATCH_SIZE:
+            yield results
+            results = []       
+            vector_count = 0    
+    
+    if results:
+        yield results

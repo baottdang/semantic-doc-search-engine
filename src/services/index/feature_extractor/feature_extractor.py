@@ -2,7 +2,7 @@ def preprocess(tensor, normalize):
     import torch.nn.functional as F
 
     # Resize from (3,H,W) → (3,224,224) if not already 224x224
-    if tensor[1:].shape != (224, 224):
+    if tensor.shape[1:] != (224, 224):
         tensor = F.interpolate(
             tensor.unsqueeze(0),  # add batch dim → (1,3,H,W)
             size=(224, 224),
@@ -35,7 +35,7 @@ def process_np_array(np_arr, feature_extractor, normalize):
 
     return feats.numpy().astype('float32')
 
-def process_np_arrays(np_arrays, feature_extractor, normalize, TENSOR_BATCH_SIZE=128):
+def process_np_arrays(np_arrays, feature_extractor, device, normalize, TENSOR_BATCH_SIZE=128):
     """
     Process a batch of vectors into feature vectors using the feature extractor model by dividing them into tensor batches.
     
@@ -46,8 +46,6 @@ def process_np_arrays(np_arrays, feature_extractor, normalize, TENSOR_BATCH_SIZE
     import torch
     
     tensors = []
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
-    feature_extractor = feature_extractor.to(device)
     for i, np_arr in enumerate(np_arrays, 1):
         tensors.append(np_array_to_tensor(np_arr, normalize))
         if len(tensors) == TENSOR_BATCH_SIZE or i == len(np_arrays):
@@ -55,4 +53,10 @@ def process_np_arrays(np_arrays, feature_extractor, normalize, TENSOR_BATCH_SIZE
             with torch.no_grad():
                 feats = feature_extractor(tensor_batch)
             tensors.clear()
-            yield feats.cpu().numpy().astype('float32')
+
+            output = feats.cpu().numpy().astype('float32')
+
+            del tensor_batch
+            del feats
+
+            yield output
