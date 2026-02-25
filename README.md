@@ -1,6 +1,8 @@
 # QLen – Local Cross-Format Visual Search Engine for PDFs & Images
 - This project provides a local search tool designed for engineers who work with piles of digital drawings, diagrams, and technical PDFs. Instead of extracting text, QLen learns the visual features of your files and retrieves results based on content similarity.
 
+- For engineers, there is also a specialized developed layer built on top of the existing foundation that allows quick searching of PDF or image files containing a specific CAD object in your local database. [Check CAD-optimized version](#cad-optimized-version)
+
 - To achieve that, the project utilizes advanced Machine Learning and CNN feature extraction models to learn and index the contents of the database, allowing searches to be based on **contextual similarity**, or **features** of the query file, returning either exact matches if found, or files of similar contents.
   
 - What makes QLen unique is its unified treatment of images and PDFs: a schematic saved as a PDF can be used to find related diagrams stored as images, and vice versa. Whether you query with a screenshot, a scanned drawing, or a technical PDF, QLen returns visually similar content across formats — all processed locally, with no cloud dependencies.
@@ -40,8 +42,28 @@
 
 - Graphical User Interface: PySide6.
 
+## CAD-optimized version
+- Imagine a use case where a client asks you - the engineer to report pricing on a CAD object whose image they provide to you. You are sure you have encountered this object before, and the PDF file containing it exists somewhere within your system but years of improper file naming convention has accumulated and obscured its true location.
+
+- With this search engine, that is no longer an issue as feeding it the image of the object will let you know immediately which files contain that object and where they are.
+
+- This custom version still has the same base-line features as the general version, such as live file indexing, cross-type and fully local while integrating new qualities tailored for engineer:
+
+  - **Custom-tuned MobileNetV3 model** on CAD objects for pinpoint accuracy.
+ 
+  - **Automatic object detection** when indexing, allowing detection and indexing of multiple objects within a drawing rather than the whole drawing in the general version.
+ 
+  - **Smart auto-focus** on object when screenshotting the object to query, enabling the system to understand what the user wants to query to improve recall accuracy.
+
+<img width="1919" height="1009" alt="test_image" src="https://github.com/user-attachments/assets/48c404cb-155d-4f4e-9743-11d0fa82958a" />
+
+- This version is a proof-of-concept to prove that the engine is completely modular. You can swap out the pretrained model for your own model to turn it into a Find-Anything engine.
+
+- **Compatibility with the general version:** Please remove the general indices before using this version, go to ``C:/Users/YourName/QLenIndex`` and remove everything inside first.
+
 ## Download
-- [v1.0.1-prealpha (Google Drive) (Windows)](https://drive.google.com/file/d/1zBmvZcgVMCtNcns2UM0kv7xMyxCOa8M-/view?usp=sharing)
+- [v1.0.1-prealpha (General version) (Google Drive) (Windows)](https://drive.google.com/file/d/1zBmvZcgVMCtNcns2UM0kv7xMyxCOa8M-/view?usp=sharing)
+- [v2.0.0-CAD (Optimized for CAD drawings) (GoogleDrive) (Windows)](https://drive.google.com/file/d/1Z8pe_WGHaVqPqlKQr7rvQZaCQP3VIBbA/view?usp=sharing)
 
 ## Support 
 - If you like this project, consider supporting me on Ko-fi
