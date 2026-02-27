@@ -55,7 +55,7 @@
  
   - **Smart auto-focus** on object when screenshotting the object to query, enabling the system to understand what the user wants to query to improve recall accuracy.
 
-<img width="1919" height="1009" alt="test_image" src="https://github.com/user-attachments/assets/48c404cb-155d-4f4e-9743-11d0fa82958a" />
+<img width="1919" height="1009" alt="test_image" src="https://github.com/user-attachments/assets/c663288c-e9ab-491c-8c5f-d289f4940b20" />
 
 - This version is a proof-of-concept to prove that the engine is completely modular. You can swap out the pretrained model for your own model to turn it into a Find-Anything engine.
 
