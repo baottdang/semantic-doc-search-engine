@@ -1,0 +1,70 @@
+from PySide6.QtCore import Qt, Slot
+from PySide6 import QtWidgets
+from PySide6.QtGui import QIcon
+from ui.menu.menubar import MenuBarWidget
+from ui.searchbox.searchbox import SearchBoxWidget, SearchBoxWidget
+from ui.sidebar.sidebar import SidebarWidget
+from ui.error.error_signal import get_error_signal_instance
+from ui.main_area.main_area import MainArea
+from ui.searchbox.searchbox_signal import get_searchbox_signal_instance
+from resources.strings.string_resource import icon_path, app_name
+
+class BackgroundWidget(QtWidgets.QMainWindow):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(app_name)
+        self.setMinimumSize(800, 600)
+        self.setWindowIcon(QIcon(icon_path))
+
+        # Add menu bar
+        self.menu_bar = MenuBarWidget(self)
+        self.setMenuBar(self.menu_bar)
+
+        # Create a searchbox
+        self.search_box = SearchBoxWidget(self)
+
+        # Signals
+        self.error_instance = get_error_signal_instance()
+        self.error_instance.error_signal.connect(self.display_error)
+
+        self.search_box_signal_instance = get_searchbox_signal_instance()
+        self.search_box_signal_instance.capture_start_signal.connect(lambda : self.hide())
+        self.search_box_signal_instance.capture_done_signal.connect(lambda qimage: ( 
+                                                                            self.show(), 
+                                                                            self.raise_(), 
+                                                                            self.activateWindow(), 
+                                                                            self.setFocus(Qt.OtherFocusReason) 
+                                                                        )
+                                                                    )
+
+        # Set toolbar widget
+        self.tool_bar = QtWidgets.QToolBar("Search Box", self)
+        self.tool_bar.setMovable(False)
+        self.tool_bar.addWidget(self.search_box)
+        self.addToolBar(Qt.TopToolBarArea, self.tool_bar)
+
+        # Set sidebar widget
+        self.sidebar = QtWidgets.QDockWidget("Properties", self)
+        self.sidebar.setAllowedAreas(Qt.LeftDockWidgetArea)
+        self.sidebar.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable | QtWidgets.QDockWidget.DockWidgetFloatable)
+        self.sidebar.setMinimumWidth(200)
+        self.sidebar.setMaximumWidth(600)
+        self.sidebar_widget = SidebarWidget(self)
+        self.sidebar.setWidget(self.sidebar_widget)
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.sidebar)
+
+        # Set central widget
+        self.central_widget = MainArea()
+        self.setCentralWidget(self.central_widget)
+        print("here")
+
+    def get_status_bar(self):
+        return self.status_bar
+    
+    def display_error(self, error_name, error_msg):
+        critical = QtWidgets.QMessageBox().critical(self, error_name, error_msg)
+
+    def closeEvent(self, event):
+        for window in QtWidgets.QApplication.topLevelWidgets():
+            if window != self:
+                window.close()

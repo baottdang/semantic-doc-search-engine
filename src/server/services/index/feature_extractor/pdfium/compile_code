@@ -1,0 +1,8 @@
+cl /EHsc /O2 /LD pdfium_wrapper.cpp ^
+  /I "C:\Users\admin\AppData\Local\Programs\Python\Python312\include" ^
+  /I "D:\DEVELOPMENTS\image_and_pdf_search_engine\devspace\Lib\site-packages\pybind11\include" ^
+  /I "D:\DEVELOPMENTS\image_and_pdf_search_engine\devspace\src\services\index\pdfium\pdfium-v8-win-x64\include" ^
+  /link ^
+  /LIBPATH:"C:\Users\admin\AppData\Local\Programs\Python\Python312\libs" python312.lib ^
+  /LIBPATH:"D:\DEVELOPMENTS\image_and_pdf_search_engine\devspace\src\services\index\pdfium\pdfium-v8-win-x64\lib" pdfium.dll.lib ^
+  /OUT:pdfium_wrapper.pyd
